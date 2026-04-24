@@ -1,0 +1,108 @@
+import { useTrueFetch } from '@/utils/constants';
+import { API_CONFIG, buildApiUrl, fetchApi } from '@/configs/web.config';
+import { mockCallbacks, mockAllCallbacks } from './mock';
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const fetchAllCallbacks = async (params = {}) => {
+  if (!useTrueFetch) {
+    await delay(300);
+    let data = mockAllCallbacks;
+    const curPage = params.curPage || 1;
+    const pageSize = params.pageSize || 20;
+    const start = (curPage - 1) * pageSize;
+    const end = start + pageSize;
+    return {
+      code: '200',
+      messageZh: '查询成功',
+      data: data.slice(start, end),
+      page: { curPage, pageSize, total: data.length }
+    };
+  }
+  const result = await fetchApi(API_CONFIG.CALLBACKS.LIST, { params });
+  return result;
+};
+
+export const fetchAppCallbacks = async (appId, params = {}) => {
+  if (!useTrueFetch) {
+    await delay(300);
+    let data = mockCallbacks;
+    data = data.filter(item => item.status !== 3);
+    if (params.status !== undefined) {
+      data = data.filter(item => item.status === params.status);
+    }
+    if (params.keyword) {
+      data = data.filter(item =>
+        item.permission?.nameCn?.includes(params.keyword)
+      );
+    }
+    return {
+      code: '200',
+      messageZh: '查询成功',
+      data: data,
+      page: { curPage: 1, pageSize: 20, total: data.length }
+    };
+  }
+  return fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.LIST, { appId }), { params });
+};
+
+export const subscribeCallbacks = async (appId, params) => {
+  if (!useTrueFetch) {
+    await delay(300);
+    const { permissionIds } = params;
+    return {
+      code: '200',
+      messageZh: `申请已提交，共${permissionIds?.length || 0}条，等待审批`,
+      data: {
+        successCount: permissionIds?.length || 0,
+        failedCount: 0,
+        records: permissionIds?.map(permissionId => ({
+          id: String(Date.now() + Math.random()),
+          appId,
+          permissionId,
+          status: 0
+        })) || []
+      }
+    };
+  }
+  return fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.SUBSCRIBE, { appId }), { method: 'POST', body: JSON.stringify(params) });
+};
+
+export const configCallbackSubscription = async (appId, callbackId, params) => {
+  if (!useTrueFetch) {
+    await delay(300);
+    return {
+      code: '200',
+      messageZh: '回调配置已保存',
+      data: { id: callbackId, ...params }
+    };
+  }
+  return fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.CONFIG, { appId, id: callbackId }), { method: 'PUT', body: JSON.stringify(params) });
+};
+
+export const remindApproval = async (id) => {
+  if (!useTrueFetch) {
+    await delay(300);
+    console.log(`催办回调 id: ${id}`);
+    return { success: true };
+  }
+  return fetchApi(`/callbacks/${id}/remind`, { method: 'POST' });
+};
+
+export const deleteCallback = async (id) => {
+  if (!useTrueFetch) {
+    await delay(300);
+    console.log(`删除回调 id: ${id}`);
+    return { success: true };
+  }
+  return fetchApi(buildApiUrl(API_CONFIG.CALLBACKS.DELETE, { id }), { method: 'DELETE' });
+};
+
+export const withdrawApproval = async (id) => {
+  if (!useTrueFetch) {
+    await delay(300);
+    console.log(`撤回审核回调 id: ${id}`);
+    return { success: true };
+  }
+  return fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.WITHDRAW, { appId: '10', id }), { method: 'POST' });
+};

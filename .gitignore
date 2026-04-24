@@ -1,5 +1,4 @@
-.worktrees
-worktrees
 node_modules
-dist
-.DS_Store
+.trae
+.worktrees
+docs

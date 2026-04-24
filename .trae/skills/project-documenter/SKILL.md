@@ -55,6 +55,8 @@ The generated document will include:
      - User interactions (click, hover, navigation, form inputs)
      - State changes and animations
      - Routing behavior
+     - **Mock Data**: Complete mock data structure for the page
+     - **Thunk Data**: Complete thunk/action data structure for async operations
 3. **Components Documentation**:
    - For each significant component:
      - Component purpose and description
@@ -128,6 +130,25 @@ Example:
 - [URL parameters used]
 - [Query strings]
 - [Navigation guards if any]
+
+#### Mock Data
+[为页面提供完整的 mock 数据结构，包括:
+- 接口请求的 mock 数据结构
+- 列表页的分页数据格式
+- 表单提交的 mock 数据
+- 状态管理中的初始数据
+- 各种业务场景的示例数据
+]
+
+#### Thunk Data
+[为页面提供完整的 thunk/action 数据结构，包括:
+- 异步请求的 action types (如 FETCH_LIST, FETCH_DETAIL, SUBMIT_FORM)
+- Thunk action creators 的函数签名
+- 请求参数结构 (params/payload)
+- 响应数据结构
+- 错误处理结构
+- 相关联的 API 调用
+]
 ```
 
 #### Component Documentation Template:
@@ -193,6 +214,8 @@ When user says "document this project" or "create a spec for recreating this pro
 - Reference actual file paths for all documented items
 - Use diagrams and tables where helpful to illustrate layout and structure
 - **CRITICAL**: Confirm with user at each stage before proceeding
+- Include complete mock data structures for all pages with realistic example data
+- Document all thunk/action structures including request parameters, response formats, and error handling
 
 ## Documentation Rules (IMPORTANT)
 

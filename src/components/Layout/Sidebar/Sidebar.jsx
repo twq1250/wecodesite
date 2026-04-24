@@ -13,6 +13,9 @@ import {
   MailOutlined,
   PlusOutlined,
   LineChartOutlined,
+  SwapOutlined,
+  FolderOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons';
 import './Sidebar.m.less';
 
@@ -35,12 +38,13 @@ function Sidebar({ sidebarMainHeight }) {
   const [searchParams] = useSearchParams();
   const appId = searchParams.get('appId') || '1';
   const enabledCapabilities = searchParams.get('caps')?.split(',').filter(Boolean) || ['bot'];
-  const currentPath = window.location.pathname.replace('/', '').split('/')[0] || 'basic-info';
+  const currentPath = window.location.pathname.replace('/', '') || 'basic-info';
 
   const isEnabled = (type) => enabledCapabilities.includes(type);
 
   const handleClick = (key) => {
-    navigate(`/${key}?appId=${appId}&caps=${enabledCapabilities.join(',')}`);
+    const path = key.includes('/') ? key : `/${key}`;
+    navigate(`${path}?appId=${appId}&caps=${enabledCapabilities.join(',')}`);
   };
 
   const handleCapabilityClick = (capability) => {
@@ -86,6 +90,7 @@ function Sidebar({ sidebarMainHeight }) {
       children: [
         { key: 'api-management', icon: <ApiOutlined />, label: 'API管理' },
         { key: 'events', icon: <BellOutlined />, label: '事件配置' },
+        { key: 'callbacks', icon: <SwapOutlined />, label: '回调配置' },
       ],
     },
     {
@@ -100,6 +105,16 @@ function Sidebar({ sidebarMainHeight }) {
         { key: 'version-release', icon: <InboxOutlined />, label: '版本发布' },
       ],
     },
+    {
+      category: '后台管理',
+      children: [
+        { key: 'admin/categories', icon: <FolderOutlined />, label: '分类管理' },
+        { key: 'admin/apis', icon: <ApiOutlined />, label: 'API管理' },
+        { key: 'admin/events', icon: <BellOutlined />, label: '事件管理' },
+        { key: 'admin/callbacks', icon: <SwapOutlined />, label: '回调管理' },
+        { key: 'admin/approvals', icon: <CheckCircleOutlined />, label: '审批中心' },
+      ],
+    },
   ];
 
   return (
@@ -111,7 +126,7 @@ function Sidebar({ sidebarMainHeight }) {
             {group.children.map((item) => (
               <li
                 key={item.key}
-                className={`sidebar-item ${currentPath === item.key ? 'active' : ''} ${item.indent ? 'indented' : ''}`}
+                className={`sidebar-item ${currentPath === item.key || currentPath.startsWith(item.key + '/') ? 'active' : ''} ${item.indent ? 'indented' : ''}`}
                 onClick={() => item.capability ? handleCapabilityClick(item.capability) : handleClick(item.key)}
               >
                 <span className="sidebar-item-icon">{item.icon}</span>
