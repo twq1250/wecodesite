@@ -21,8 +21,13 @@ function EventSubscriptionDrawer({ open, onClose, onSave, event }) {
   }, [event, open, form]);
 
   const handleChannelTypeChange = (e) => {
-    setChannelType(e.target.value);
-    form.setFieldsValue({ channelType: e.target.value });
+    const newChannelType = e.target.value;
+    setChannelType(newChannelType);
+    const updateFields = { channelType: newChannelType };
+    if (newChannelType === 1) {
+      updateFields.authType = 0;
+    }
+    form.setFieldsValue(updateFields);
   };
 
   const handleSave = async () => {

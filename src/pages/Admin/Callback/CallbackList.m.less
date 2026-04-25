@@ -36,3 +36,11 @@
   display: flex;
   gap: 12px;
 }
+
+.table-wrapper {
+  overflow-x: auto;
+  
+  :global(.ant-table) {
+    min-width: 800px;
+  }
+}
