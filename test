@@ -1,0 +1,32 @@
+/pages/ApiManagement
+/pages/Callbacks
+/pages/Events
+/pages/Admin/Api
+/pages/Admin/Approval
+/pages/Admin/Callback
+/pages/Admin/Category
+/pages/Admin/Event
+
+try {
+    const result = await fetchApi(API_CONFIG.CATEGORIES.LIST, { params: { categoryAlias: apiType } });
+    return result || {};
+} catch (err) {
+    return {}
+}
+
+const res = await subscribeApis(appId, { permissionIds });
+if (res && res.code === '200') {
+    // 后续交互
+} else {
+    message.error(res.message)
+}
+
+export default {
+    path: '/events',
+    auth: false,
+    preload: false,
+    isStatic: true,
+    key: 'events',
+    layout: 'inner',
+    component: () => import('./index'),
+}

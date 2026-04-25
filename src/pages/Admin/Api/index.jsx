@@ -10,6 +10,7 @@ import {
   Popconfirm,
   Empty,
   Spin,
+  message,
 } from 'antd';
 import {
   PlusOutlined,
@@ -20,31 +21,16 @@ import {
 import { fetchApiList, deleteApi } from './thunk';
 import { fetchCategoryTree } from '../Category/thunk';
 import ApiRegister from './ApiRegister';
+import { STATUS_MAP, AUTH_TYPE_MAP, getApiListColumns } from './constants';
+import { INIT_PAGINATION } from '../../../utils/constants';
 import './ApiList.m.less';
 
 const { Search } = Input;
 
-const STATUS_MAP = {
-  0: { text: '草稿', color: 'default' },
-  1: { text: '待审', color: 'orange' },
-  2: { text: '已发布', color: 'green' },
-  3: { text: '已下线', color: 'red' },
-};
-
-const AUTH_TYPE_MAP = {
-  0: 'Cookie',
-  1: 'SOA',
-  2: 'APIG',
-  3: 'IAM',
-  4: '免认证',
-  5: 'AKSK',
-  6: 'CLITOKEN',
-};
-
 function ApiList() {
   const [loading, setLoading] = useState(false);
   const [apiList, setApiList] = useState([]);
-  const [total, setTotal] = useState(0);
+  const [pagination, setPagination] = useState(INIT_PAGINATION);
   const [keyword, setKeyword] = useState('');
   const [categoryId, setCategoryId] = useState(undefined);
   const [status, setStatus] = useState(undefined);
@@ -65,7 +51,6 @@ function ApiList() {
     }
   };
 
-  // 将后端返回的分类树数据转换为 TreeSelect 所需格式
   const convertToTreeData = (categories) => {
     if (!categories) return [];
     return categories.map(cat => ({
@@ -78,7 +63,6 @@ function ApiList() {
 
   const loadData = async (params = {}) => {
     setLoading(true);
-    // 使用 'key' in params 区分"传入 undefined 表示清除"和"没有传这个参数"
     const finalKeyword = 'keyword' in params ? params.keyword : keyword;
     const finalCategoryId = 'categoryId' in params ? params.categoryId : categoryId;
     const finalStatus = 'status' in params ? params.status : status;
@@ -89,12 +73,10 @@ function ApiList() {
       status: finalStatus,
     };
     
-    // 只有当 curPage 有值时才添加
     if (params.curPage !== undefined) {
       requestParams.curPage = params.curPage;
     }
     
-    // 过滤掉值为 undefined 的参数
     const filteredParams = Object.fromEntries(
       Object.entries(requestParams).filter(([_, value]) => value !== undefined)
     );
@@ -102,7 +84,7 @@ function ApiList() {
     const result = await fetchApiList(filteredParams);
     if (result.code === '200') {
       setApiList(result.data);
-      setTotal(result.page?.total || 0);
+      setPagination(prev => ({ ...prev, total: result.page?.total || 0 }));
     }
     setLoading(false);
   };
@@ -130,8 +112,13 @@ function ApiList() {
   };
 
   const handleDelete = async (id) => {
-    await deleteApi(id);
-    loadData();
+    const res = await deleteApi(id);
+    if (res && res.code === '200') {
+      message.success('删除成功');
+      loadData();
+    } else {
+      message.error(res?.message || '删除失败');
+    }
   };
 
   const handleSuccess = () => {
@@ -139,78 +126,56 @@ function ApiList() {
     loadData();
   };
 
-  const columns = [
-    {
-      title: 'API名称',
-      dataIndex: 'nameCn',
-      key: 'nameCn',
-      render: (text, record) => (
-        <div>
-          <div>{text}</div>
-          <div style={{ fontSize: 12, color: '#999' }}>{record.nameEn}</div>
-        </div>
-      ),
-    },
-    {
-      title: '分类',
-      dataIndex: 'categoryName',
-      key: 'categoryName',
-    },
-    {
-      title: '路径',
-      dataIndex: 'path',
-      key: 'path',
-      render: (text) => <code>{text}</code>,
-    },
-    {
-      title: '方法',
-      dataIndex: 'method',
-      key: 'method',
-      render: (method) => <Tag color="blue">{method}</Tag>,
-    },
-    {
-      title: '认证方式',
-      dataIndex: 'authType',
-      key: 'authType',
-      render: (authType) => {
-        const label = AUTH_TYPE_MAP[authType] || 'SOA';
-        return <Tag color="purple">{label}</Tag>;
-      },
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => {
-        const { text, color } = STATUS_MAP[status] || STATUS_MAP[0];
-        return <Tag color={color}>{text}</Tag>;
-      },
-    },
-    {
-      title: '操作',
-      key: 'action',
-      render: (_, record) => (
-        <Space>
-          <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => handleView(record)}>
-            详情
-          </Button>
-          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定删除该API吗？"
-            onConfirm={() => handleDelete(record.id)}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-              删除
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  const renderApiName = (text, record) => (
+    <div>
+      <div>{text}</div>
+      <div style={{ fontSize: 12, color: '#999' }}>{record.nameEn}</div>
+    </div>
+  );
+
+  const renderPath = (text) => <code>{text}</code>;
+
+  const renderMethod = (method) => <Tag color="blue">{method}</Tag>;
+
+  const renderAuthType = (authType) => {
+    const label = AUTH_TYPE_MAP[authType] || 'SOA';
+    return <Tag color="purple">{label}</Tag>;
+  };
+
+  const renderStatus = (status) => {
+    const { text, color } = STATUS_MAP[status] || STATUS_MAP[0];
+    return <Tag color={color}>{text}</Tag>;
+  };
+
+  const renderAction = (_, record) => (
+    <Space>
+      <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => handleView(record)}>
+        详情
+      </Button>
+      <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
+        编辑
+      </Button>
+      <Popconfirm
+        title="确定删除该API吗？"
+        onConfirm={() => handleDelete(record.id)}
+        okText="确定"
+        cancelText="取消"
+      >
+        <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+          删除
+        </Button>
+      </Popconfirm>
+    </Space>
+  );
+
+  const columns = getApiListColumns({
+    renderApiName,
+    renderPath,
+    renderMethod,
+    renderAuthType,
+    renderStatus,
+    renderAction,
+  });
 
   return (
     <div className="api-list">
@@ -269,8 +234,8 @@ function ApiList() {
               dataSource={apiList}
               rowKey="id"
               pagination={{
-                total,
-                pageSize: 20,
+                total: pagination.total,
+                pageSize: pagination.pageSize,
                 onChange: (page) => loadData({ curPage: page }),
               }}
             />

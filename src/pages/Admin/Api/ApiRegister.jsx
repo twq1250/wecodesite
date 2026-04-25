@@ -12,28 +12,9 @@ import {
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { createApi, updateApi, fetchApiDetail } from './thunk';
 import { fetchCategoryTree } from '../Category/thunk';
+import { API_PROPERTY_PRESETS, AUTH_TYPE_OPTIONS, HTTP_METHOD_OPTIONS } from './constants';
 
 const { Option } = Select;
-
-// API 扩展属性预设选项
-const API_PROPERTY_PRESETS = [
-  { value: 'descriptionCn', label: '中文描述', placeholder: 'API的中文描述' },
-  { value: 'descriptionEn', label: '英文描述', placeholder: 'API description in English' },
-  { value: 'docUrl', label: '文档链接', placeholder: 'https://docs.example.com/api/xxx' },
-  { value: 'rateLimit', label: '速率限制', placeholder: '100/minute' },
-  { value: '__custom__', label: '自定义...', placeholder: '输入自定义属性名' },
-];
-
-// 认证方式选项
-const AUTH_TYPE_OPTIONS = [
-  { value: 0, label: 'Cookie' },
-  { value: 1, label: 'SOA' },
-  { value: 2, label: 'APIG' },
-  { value: 3, label: 'IAM' },
-  { value: 4, label: '免认证' },
-  { value: 5, label: 'AKSK' },
-  { value: 6, label: 'CLITOKEN' },
-];
 
 function ApiRegister({ visible, api, mode = 'create', onSuccess, onCancel }) {
   const [form] = Form.useForm();
@@ -139,12 +120,20 @@ function ApiRegister({ visible, api, mode = 'create', onSuccess, onCancel }) {
       let result;
       if (api?.id) {
         result = await updateApi(api.id, data);
+        if (result && result.code === '200') {
+          message.success('更新成功');
+          onSuccess();
+        } else {
+          message.error(result?.message || '更新失败');
+        }
       } else {
         result = await createApi(data);
-      }
-
-      if (result.code === '200') {
-        onSuccess();
+        if (result && result.code === '200') {
+          message.success('注册成功');
+          onSuccess();
+        } else {
+          message.error(result?.message || '注册失败');
+        }
       }
     } catch (error) {
       console.error('表单验证失败:', error);
@@ -223,11 +212,9 @@ function ApiRegister({ visible, api, mode = 'create', onSuccess, onCancel }) {
             rules={[{ required: true, message: '请选择HTTP方法' }]}
           >
             <Select placeholder="请选择HTTP方法" disabled={mode === 'view'}>
-              <Option value="GET">GET</Option>
-              <Option value="POST">POST</Option>
-              <Option value="PUT">PUT</Option>
-              <Option value="DELETE">DELETE</Option>
-              <Option value="PATCH">PATCH</Option>
+              {HTTP_METHOD_OPTIONS.map(opt => (
+                <Option value={opt.value}>{opt.label}</Option>
+              ))}
             </Select>
           </Form.Item>
 

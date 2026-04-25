@@ -10,6 +10,7 @@ import {
   Popconfirm,
   Empty,
   Spin,
+  message,
 } from 'antd';
 import {
   PlusOutlined,
@@ -17,31 +18,26 @@ import {
   DeleteOutlined,
   EyeOutlined,
 } from '@ant-design/icons';
-import { fetchCallbackList, deleteCallback } from './thunk';
+import { fetchEventList, deleteEvent } from './thunk';
 import { fetchCategoryTree } from '../Category/thunk';
-import CallbackRegister from './CallbackRegister';
-import './CallbackList.m.less';
+import EventRegister from './EventRegister';
+import { STATUS_MAP, getEventListColumns } from './constants';
+import { INIT_PAGINATION } from '../../../utils/constants';
+import './EventList.m.less';
 
 const { Search } = Input;
 
-const STATUS_MAP = {
-  0: { text: '草稿', color: 'default' },
-  1: { text: '待审', color: 'orange' },
-  2: { text: '已发布', color: 'green' },
-  3: { text: '已下线', color: 'red' },
-};
-
-function CallbackList() {
+function EventList() {
   const [loading, setLoading] = useState(false);
-  const [callbackList, setCallbackList] = useState([]);
-  const [total, setTotal] = useState(0);
+  const [eventList, setEventList] = useState([]);
+  const [pagination, setPagination] = useState(INIT_PAGINATION);
   const [keyword, setKeyword] = useState('');
   const [categoryId, setCategoryId] = useState(undefined);
   const [status, setStatus] = useState(undefined);
-  const [categories, setCategories] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [currentCallback, setCurrentCallback] = useState(null);
+  const [currentEvent, setCurrentEvent] = useState(null);
   const [mode, setMode] = useState('create');
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     loadData();
@@ -55,7 +51,6 @@ function CallbackList() {
     }
   };
 
-  // 将后端返回的分类树数据转换为 TreeSelect 所需格式
   const convertToTreeData = (categories) => {
     if (!categories) return [];
     return categories.map(cat => ({
@@ -68,7 +63,6 @@ function CallbackList() {
 
   const loadData = async (params = {}) => {
     setLoading(true);
-    // 使用 'key' in params 区分"传入 undefined 表示清除"和"没有传这个参数"
     const finalKeyword = 'keyword' in params ? params.keyword : keyword;
     const finalCategoryId = 'categoryId' in params ? params.categoryId : categoryId;
     const finalStatus = 'status' in params ? params.status : status;
@@ -79,20 +73,18 @@ function CallbackList() {
       status: finalStatus,
     };
     
-    // 只有当 curPage 有值时才添加
     if (params.curPage !== undefined) {
       requestParams.curPage = params.curPage;
     }
     
-    // 过滤掉值为 undefined 的参数
     const filteredParams = Object.fromEntries(
       Object.entries(requestParams).filter(([_, value]) => value !== undefined)
     );
 
-    const result = await fetchCallbackList(filteredParams);
+    const result = await fetchEventList(filteredParams);
     if (result.code === '200') {
-      setCallbackList(result.data);
-      setTotal(result.page?.total || 0);
+      setEventList(result.data);
+      setPagination(prev => ({ ...prev, total: result.page?.total || 0 }));
     }
     setLoading(false);
   };
@@ -102,19 +94,19 @@ function CallbackList() {
   };
 
   const handleAdd = () => {
-    setCurrentCallback(null);
+    setCurrentEvent(null);
     setMode('create');
     setModalVisible(true);
   };
 
   const handleEdit = (record) => {
-    setCurrentCallback({ id: record.id });
+    setCurrentEvent({ id: record.id });
     setMode('edit');
     setModalVisible(true);
   };
 
   const handleView = (record) => {
-    setCurrentCallback({ id: record.id });
+    setCurrentEvent({ id: record.id });
     setMode('view');
     setModalVisible(true);
   };
@@ -125,77 +117,72 @@ function CallbackList() {
   };
 
   const handleDelete = async (id) => {
-    await deleteCallback(id);
-    loadData();
+    const res = await deleteEvent(id);
+    if (res && res.code === '200') {
+      message.success('删除成功');
+      loadData();
+    } else {
+      message.error(res?.message || '删除失败');
+    }
   };
 
-  const columns = [
-    {
-      title: '回调名称',
-      dataIndex: 'nameCn',
-      key: 'nameCn',
-      render: (text, record) => (
-        <div>
-          <div>{text}</div>
-          <div style={{ fontSize: 12, color: '#999' }}>{record.nameEn}</div>
-        </div>
-      ),
-    },
-    {
-      title: '分类',
-      dataIndex: 'categoryName',
-      key: 'categoryName',
-    },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => {
-        const { text, color } = STATUS_MAP[status] || STATUS_MAP[0];
-        return <Tag color={color}>{text}</Tag>;
-      },
-    },
-    {
-      title: '操作',
-      key: 'action',
-      render: (_, record) => (
-        <Space>
-          <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => handleView(record)}>
-            详情
-          </Button>
-          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Popconfirm
-            title="确定删除该回调吗？"
-            onConfirm={() => handleDelete(record.id)}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-              删除
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ];
+  const renderEventName = (text, record) => (
+    <div>
+      <div>{text}</div>
+      <div style={{ fontSize: 12, color: '#999' }}>{record.nameEn}</div>
+    </div>
+  );
+
+  const renderTopic = (text) => <code>{text}</code>;
+
+  const renderStatus = (status) => {
+    const { text, color } = STATUS_MAP[status] || STATUS_MAP[0];
+    return <Tag color={color}>{text}</Tag>;
+  };
+
+  const renderAction = (_, record) => (
+    <Space>
+      <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => handleView(record)}>
+        详情
+      </Button>
+      <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
+        编辑
+      </Button>
+      <Popconfirm
+        title="确定删除该事件吗？"
+        onConfirm={() => handleDelete(record.id)}
+        okText="确定"
+        cancelText="取消"
+      >
+        <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+          删除
+        </Button>
+      </Popconfirm>
+    </Space>
+  );
+
+  const columns = getEventListColumns({
+    renderEventName,
+    renderTopic,
+    renderStatus,
+    renderAction,
+  });
 
   return (
-    <div className="callback-list">
+    <div className="event-list">
       <div className="page-header">
         <div className="page-header-left">
-          <h4 className="page-title">回调管理</h4>
-          <span className="page-desc">管理回调接口，配置回调地址</span>
+          <h4 className="page-title">事件管理</h4>
+          <span className="page-desc">管理事件定义，配置事件订阅</span>
         </div>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-          注册回调
+          注册事件
         </Button>
       </div>
 
       <div className="toolbar">
         <Search
-            placeholder="搜索回调名称"
+            placeholder="搜索事件名称"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             style={{ width: 200 }}
@@ -232,25 +219,25 @@ function CallbackList() {
         </div>
 
         <Spin spinning={loading}>
-          {callbackList.length > 0 ? (
+          {eventList.length > 0 ? (
             <Table
               columns={columns}
-              dataSource={callbackList}
+              dataSource={eventList}
               rowKey="id"
               pagination={{
-                total,
-                pageSize: 20,
+                total: pagination.total,
+                pageSize: pagination.pageSize,
                 onChange: (page) => loadData({ curPage: page }),
               }}
             />
           ) : (
-            <Empty description="暂无回调数据" />
+            <Empty description="暂无事件数据" />
           )}
         </Spin>
 
-      <CallbackRegister
+      <EventRegister
         visible={modalVisible}
-        callback={currentCallback}
+        event={currentEvent}
         mode={mode}
         onSuccess={handleSuccess}
         onCancel={() => setModalVisible(false)}
@@ -259,4 +246,4 @@ function CallbackList() {
   );
 }
 
-export default CallbackList;
+export default EventList;

@@ -12,16 +12,7 @@ import {
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { createCallback, updateCallback, fetchCallbackDetail } from './thunk';
 import { fetchCategoryTree } from '../Category/thunk';
-
-// 回调扩展属性预设选项
-const CALLBACK_PROPERTY_PRESETS = [
-  { value: 'descriptionCn', label: '中文描述', placeholder: '回调的中文描述' },
-  { value: 'descriptionEn', label: '英文描述', placeholder: 'Callback description in English' },
-  { value: 'docUrl', label: '文档链接', placeholder: 'https://docs.example.com/callback/xxx' },
-  { value: 'timeout', label: '超时时间', placeholder: '30000 (毫秒)' },
-  { value: 'retryCount', label: '重试次数', placeholder: '3' },
-  { value: '__custom__', label: '自定义...', placeholder: '输入自定义属性名' },
-];
+import { CALLBACK_PROPERTY_PRESETS } from './constants';
 
 function CallbackRegister({ visible, callback, mode = 'create', onSuccess, onCancel }) {
   const [form] = Form.useForm();
@@ -112,12 +103,20 @@ function CallbackRegister({ visible, callback, mode = 'create', onSuccess, onCan
       let result;
       if (callback?.id) {
         result = await updateCallback(callback.id, data);
+        if (result && result.code === '200') {
+          message.success('更新成功');
+          onSuccess();
+        } else {
+          message.error(result?.message || '更新失败');
+        }
       } else {
         result = await createCallback(data);
-      }
-
-      if (result.code === '200') {
-        onSuccess();
+        if (result && result.code === '200') {
+          message.success('注册成功');
+          onSuccess();
+        } else {
+          message.error(result?.message || '注册失败');
+        }
       }
     } catch (error) {
       console.error('表单验证失败:', error);

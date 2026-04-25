@@ -15,7 +15,12 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  */
 export const fetchApprovalList = async (params = {}) => {
   if (useTrueFetch) {
-    return fetchApi(API_CONFIG.APPROVALS.PENDING, { method: 'GET', params });
+    try {
+      const result = await fetchApi(API_CONFIG.APPROVALS.PENDING, { method: 'GET', params });
+      return result || {};
+    } catch (err) {
+      return {};
+    }
   }
   await delay(300);
   let data = mockApprovals;
@@ -37,7 +42,12 @@ export const fetchApprovalList = async (params = {}) => {
  */
 export const fetchApprovalDetail = async (id) => {
   if (useTrueFetch) {
-    return fetchApi(buildApiUrl(API_CONFIG.APPROVALS.DETAIL, { id }));
+    try {
+      const result = await fetchApi(buildApiUrl(API_CONFIG.APPROVALS.DETAIL, { id }));
+      return result || {};
+    } catch (err) {
+      return {};
+    }
   }
   await delay(300);
   const approval = mockApprovals.find(item => item.id === id);
@@ -55,8 +65,12 @@ export const fetchApprovalDetail = async (id) => {
  */
 export const fetchMyApprovals = async (params = {}) => {
   if (useTrueFetch) {
-    // 使用待审批列表接口，通过参数筛选
-    return fetchApi(API_CONFIG.APPROVALS.PENDING, { method: 'GET', params: { ...params, applicantId: 'current' } });
+    try {
+      const result = await fetchApi(API_CONFIG.APPROVALS.PENDING, { method: 'GET', params: { ...params, applicantId: 'current' } });
+      return result || {};
+    } catch (err) {
+      return {};
+    }
   }
   await delay(300);
   return {
@@ -74,10 +88,15 @@ export const fetchMyApprovals = async (params = {}) => {
  */
 export const approveApplication = async (id, data = {}) => {
   if (useTrueFetch) {
-    return fetchApi(buildApiUrl(API_CONFIG.APPROVALS.APPROVE, { id }), { 
-      method: 'POST', 
-      body: JSON.stringify(data) 
-    });
+    try {
+      const result = await fetchApi(buildApiUrl(API_CONFIG.APPROVALS.APPROVE, { id }), { 
+        method: 'POST', 
+        body: JSON.stringify(data) 
+      });
+      return result || {};
+    } catch (err) {
+      return {};
+    }
   }
   await delay(300);
   return {
@@ -95,10 +114,14 @@ export const approveApplication = async (id, data = {}) => {
  */
 export const rejectApplication = async (id, data = {}) => {
   if (useTrueFetch) {
-    return fetchApi(buildApiUrl(API_CONFIG.APPROVALS.REJECT, { id }), { 
-      method: 'POST', 
-      body: JSON.stringify(data) 
-    });
+    try {
+      return await fetchApi(buildApiUrl(API_CONFIG.APPROVALS.REJECT, { id }), { 
+        method: 'POST', 
+        body: JSON.stringify(data) 
+      });
+    } catch (err) {
+      return {};
+    }
   }
   await delay(300);
   return {
@@ -115,7 +138,12 @@ export const rejectApplication = async (id, data = {}) => {
  */
 export const cancelApproval = async (id) => {
   if (useTrueFetch) {
-    return fetchApi(buildApiUrl(API_CONFIG.APPROVALS.CANCEL, { id }), { method: 'POST' });
+    try {
+      const result = await fetchApi(buildApiUrl(API_CONFIG.APPROVALS.CANCEL, { id }), { method: 'POST' });
+      return result || {};
+    } catch (err) {
+      return {};
+    }
   }
   await delay(300);
   return {
@@ -132,10 +160,15 @@ export const cancelApproval = async (id) => {
  */
 export const batchApprove = async (data) => {
   if (useTrueFetch) {
-    return fetchApi(API_CONFIG.APPROVALS.BATCH_APPROVE, { 
-      method: 'POST', 
-      body: JSON.stringify(data) 
-    });
+    try {
+      const result = await fetchApi(API_CONFIG.APPROVALS.BATCH_APPROVE, { 
+        method: 'POST', 
+        body: JSON.stringify(data) 
+      });
+      return result || {};
+    } catch (err) {
+      return {};
+    }
   }
   await delay(300);
   return {
@@ -152,10 +185,15 @@ export const batchApprove = async (data) => {
  */
 export const batchReject = async (data) => {
   if (useTrueFetch) {
-    return fetchApi(API_CONFIG.APPROVALS.BATCH_REJECT, { 
-      method: 'POST', 
-      body: JSON.stringify(data) 
-    });
+    try {
+      const result = await fetchApi(API_CONFIG.APPROVALS.BATCH_REJECT, { 
+        method: 'POST', 
+        body: JSON.stringify(data) 
+      });
+      return result || {};
+    } catch (err) {
+      return {};
+    }
   }
   await delay(300);
   return {

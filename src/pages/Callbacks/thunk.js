@@ -19,8 +19,12 @@ export const fetchAllCallbacks = async (params = {}) => {
       page: { curPage, pageSize, total: data.length }
     };
   }
-  const result = await fetchApi(API_CONFIG.CALLBACKS.LIST, { params });
-  return result;
+  try {
+    const result = await fetchApi(API_CONFIG.CALLBACKS.LIST, { params });
+    return result || {};
+  } catch (err) {
+    return {};
+  }
 };
 
 export const fetchAppCallbacks = async (appId, params = {}) => {
@@ -43,7 +47,12 @@ export const fetchAppCallbacks = async (appId, params = {}) => {
       page: { curPage: 1, pageSize: 20, total: data.length }
     };
   }
-  return fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.LIST, { appId }), { params });
+  try {
+    const result = await fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.LIST, { appId }), { params });
+    return result || {};
+  } catch (err) {
+    return {};
+  }
 };
 
 export const subscribeCallbacks = async (appId, params) => {
@@ -65,7 +74,12 @@ export const subscribeCallbacks = async (appId, params) => {
       }
     };
   }
-  return fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.SUBSCRIBE, { appId }), { method: 'POST', body: JSON.stringify(params) });
+  try {
+    const result = await fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.SUBSCRIBE, { appId }), { method: 'POST', body: JSON.stringify(params) });
+    return result || {};
+  } catch (err) {
+    return {};
+  }
 };
 
 export const configCallbackSubscription = async (appId, callbackId, params) => {
@@ -77,32 +91,52 @@ export const configCallbackSubscription = async (appId, callbackId, params) => {
       data: { id: callbackId, ...params }
     };
   }
-  return fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.CONFIG, { appId, id: callbackId }), { method: 'PUT', body: JSON.stringify(params) });
+  try {
+    const result = await fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.CONFIG, { appId, id: callbackId }), { method: 'PUT', body: JSON.stringify(params) });
+    return result || {};
+  } catch (err) {
+    return {};
+  }
 };
 
 export const remindApproval = async (id) => {
   if (!useTrueFetch) {
     await delay(300);
     console.log(`催办回调 id: ${id}`);
-    return { success: true };
+    return { code: '200', messageZh: '催办成功' };
   }
-  return fetchApi(`/callbacks/${id}/remind`, { method: 'POST' });
+  try {
+    const result = await fetchApi(`/callbacks/${id}/remind`, { method: 'POST' });
+    return result || {};
+  } catch (err) {
+    return {};
+  }
 };
 
 export const deleteCallback = async (id) => {
   if (!useTrueFetch) {
     await delay(300);
     console.log(`删除回调 id: ${id}`);
-    return { success: true };
+    return { code: '200', messageZh: '删除成功' };
   }
-  return fetchApi(buildApiUrl(API_CONFIG.CALLBACKS.DELETE, { id }), { method: 'DELETE' });
+  try {
+    const result = await fetchApi(buildApiUrl(API_CONFIG.CALLBACKS.DELETE, { id }), { method: 'DELETE' });
+    return result || {};
+  } catch (err) {
+    return {};
+  }
 };
 
 export const withdrawApproval = async (id) => {
   if (!useTrueFetch) {
     await delay(300);
     console.log(`撤回审核回调 id: ${id}`);
-    return { success: true };
+    return { code: '200', messageZh: '已撤回' };
   }
-  return fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.WITHDRAW, { appId: '10', id }), { method: 'POST' });
+  try {
+    const result = await fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.WITHDRAW, { appId: '10', id }), { method: 'POST' });
+    return result || {};
+  } catch (err) {
+    return {};
+  }
 };
