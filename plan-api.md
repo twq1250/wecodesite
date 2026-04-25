@@ -182,6 +182,43 @@
 
 ---
 
+### 0.6 状态枚举定义
+
+#### 订阅状态 (Subscription Status)
+
+用于标识应用对权限资源的订阅状态，适用于 API/事件/回调权限管理。
+
+| 值 | 状态 | 说明 | 可执行操作 |
+|----|------|------|-----------|
+| 0 | 审核中 | 申请已提交，等待审批 | 撤回申请 |
+| 1 | 已授权 | 审批通过，权限生效 | 配置消费参数（事件/回调） |
+| 2 | 已拒绝 | 审批驳回 | 重新申请 |
+| 3 | 已取消 | 消费方主动撤回 | 重新申请 |
+
+#### 审批状态 (Approval Status)
+
+用于标识审批单的处理状态。
+
+| 值 | 状态 | 说明 |
+|----|------|------|
+| 0 | 待审批 | 等待审批人处理 |
+| 1 | 已通过 | 审批同意 |
+| 2 | 已驳回 | 审批拒绝 |
+| 3 | 已撤销 | 申请人撤销 |
+
+#### 资源状态 (Resource Status)
+
+用于标识 API/事件/回调资源的生命周期状态。
+
+| 值 | 状态 | 说明 |
+|----|------|------|
+| 0 | 草稿 | 初始状态或已撤回 |
+| 1 | 待审 | 已提交注册，等待审批 |
+| 2 | 已发布 | 审批通过，资源上架 |
+| 3 | 已下线 | 资源已下线 |
+
+---
+
 ## 1. 接口清单
 
 | # | 模块 | Method | Path | 说明 | FR |
@@ -230,22 +267,23 @@
 | 42 | | GET | `/api/v1/approval-flows/:id` | 获取审批流程模板详情 | FR-025 |
 | 43 | | POST | `/api/v1/approval-flows` | 创建审批流程模板 | FR-025 |
 | 44 | | PUT | `/api/v1/approval-flows/:id` | 更新审批流程模板 | FR-025 |
-| 45 | | GET | `/api/v1/approvals/pending` | 获取待审批列表 | FR-026/FR-027 |
-| 46 | | GET | `/api/v1/approvals/:id` | 获取审批详情 | FR-026/FR-027 |
-| 47 | | POST | `/api/v1/approvals/:id/approve` | 同意审批 | FR-026/FR-027 |
-| 48 | | POST | `/api/v1/approvals/:id/reject` | 驳回审批（需填写原因） | FR-026/FR-027 |
-| 49 | | POST | `/api/v1/approvals/:id/cancel` | 撤销审批 | FR-026/FR-027 |
-| 50 | | POST | `/api/v1/approvals/batch-approve` | 批量同意审批 | FR-026/FR-027 |
-| 51 | | POST | `/api/v1/approvals/batch-reject` | 批量驳回审批（需填写原因） | FR-026/FR-027 |
-| 52 | **Scope 授权管理** | GET | `/api/v1/user-authorizations` | 获取用户授权列表 | FR-031 |
-| 53 | | POST | `/api/v1/user-authorizations` | 用户授权（设置有效期） | FR-031 |
-| 54 | | DELETE | `/api/v1/user-authorizations/:id` | 取消授权 | FR-031 |
-| 55 | **消费网关** | ANY | `/gateway/api/*` | API 请求代理与鉴权 | FR-028 |
-| 56 | | POST | `/gateway/events/publish` | 事件发布接口 | FR-029 |
-| 57 | | POST | `/gateway/callbacks/invoke` | 回调触发接口 | FR-030 |
-| 58 | | GET | `/gateway/permissions/check` | 权限校验接口 | FR-028/029/030 |
+| 45 | | DELETE | `/api/v1/approval-flows/:id` | 删除审批流程模板 | FR-025 |
+| 46 | | GET | `/api/v1/approvals/pending` | 获取待审批列表 | FR-026/FR-027 |
+| 47 | | GET | `/api/v1/approvals/:id` | 获取审批详情 | FR-026/FR-027 |
+| 48 | | POST | `/api/v1/approvals/:id/approve` | 同意审批 | FR-026/FR-027 |
+| 49 | | POST | `/api/v1/approvals/:id/reject` | 驳回审批（需填写原因） | FR-026/FR-027 |
+| 50 | | POST | `/api/v1/approvals/:id/cancel` | 撤销审批 | FR-026/FR-027 |
+| 51 | | POST | `/api/v1/approvals/batch-approve` | 批量同意审批 | FR-026/FR-027 |
+| 52 | | POST | `/api/v1/approvals/batch-reject` | 批量驳回审批（需填写原因） | FR-026/FR-027 |
+| 53 | **Scope 授权管理** | GET | `/api/v1/user-authorizations` | 获取用户授权列表 | FR-031 |
+| 54 | | POST | `/api/v1/user-authorizations` | 用户授权（设置有效期） | FR-031 |
+| 55 | | DELETE | `/api/v1/user-authorizations/:id` | 取消授权 | FR-031 |
+| 56 | **消费网关** | ANY | `/gateway/api/*` | API 请求代理与鉴权 | FR-028 |
+| 57 | | POST | `/gateway/events/publish` | 事件发布接口 | FR-029 |
+| 58 | | POST | `/gateway/callbacks/invoke` | 回调触发接口 | FR-030 |
+| 59 | | GET | `/gateway/permissions/check` | 权限校验接口 | FR-028/029/030 |
 
-> **接口统计**：共 58 个接口，覆盖 FR-001 ~ FR-031
+> **接口统计**：共 59 个接口，覆盖 FR-001 ~ FR-031
 >
 > **权限树设计说明**：采用懒加载模式，分为两个步骤：
 > 1. 查树：`GET /api/v1/categories` 获取分类树
@@ -569,6 +607,7 @@
         "nameEn": "Send Message",
         "path": "/api/v1/messages",
         "method": "POST",
+        "authType": 1,
         "categoryId": "2",
         "categoryName": "IM 业务",
         "status": 2,
@@ -607,6 +646,7 @@
     "nameEn": "Send Message",
     "path": "/api/v1/messages",
     "method": "POST",
+    "authType": 1,
     "categoryId": "2",
     "status": 2,
     "createTime": "2026-04-20T10:00:00.000Z",
@@ -616,6 +656,11 @@
       "nameCn": "发送消息权限",
       "nameEn": "Send Message Permission",
       "scope": "api:im:send-message",
+      "needApproval": 1,
+      "resourceNodes": [
+        { "type": "approver", "userId": "api_admin", "userName": "API管理员", "order": 1 },
+        { "type": "approver", "userId": "security_admin", "userName": "安全管理员", "order": 2 }
+      ],
       "status": 1
     },
     "properties": [
@@ -642,6 +687,7 @@
 | name_en | string | 是 | 英文名称 |
 | path | string | 是 | API 路径 |
 | method | string | 是 | HTTP 方法（GET/POST/PUT/DELETE） |
+| auth_type | int | 否 | 认证方式: 0=Cookie, 1=SOA, 2=APIG, 3=IAM, 4=免认证, 5=AKSK, 6=CLITOKEN，默认 1 |
 | category_id | long | 是 | 所属分类ID |
 | permission | object | 是 | 权限定义 |
 | properties | array | 否 | 扩展属性列表 |
@@ -653,7 +699,17 @@
 | name_cn | string | 是 | 权限中文名称 |
 | name_en | string | 是 | 权限英文名称 |
 | scope | string | 是 | Scope标识，格式 `api:{模块}:{资源标识}` |
-| approval_flow_id | long | 否 | 审批流程ID，不填使用默认流程 |
+| need_approval | int | 否 | 是否需要审批：0=否, 1=是，默认 1 |
+| resource_nodes | array | 否 | 资源级审批节点数组（JSON数组，存储为VARCHAR字符串） |
+
+**resource_nodes 数组元素**：
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| type | string | 是 | 节点类型（approver=审批人） |
+| user_id | string | 是 | 审批人ID |
+| user_name | string | 是 | 审批人姓名 |
+| order | int | 是 | 节点顺序 |
 
 ```json
 {
@@ -661,11 +717,17 @@
   "nameEn": "Send Message",
   "path": "/api/v1/messages",
   "method": "POST",
+  "authType": 1,
   "categoryId": "2",
   "permission": {
     "nameCn": "发送消息权限",
     "nameEn": "Send Message Permission",
-    "scope": "api:im:send-message"
+    "scope": "api:im:send-message",
+    "needApproval": 1,
+    "resourceNodes": [
+      { "type": "approver", "userId": "api_admin", "userName": "API管理员", "order": 1 },
+      { "type": "approver", "userId": "security_admin", "userName": "安全管理员", "order": 2 }
+    ]
   },
   "properties": [
     { "propertyName": "descriptionCn", "propertyValue": "发送消息API的中文描述" },
@@ -688,14 +750,14 @@
     "nameEn": "Send Message",
     "path": "/api/v1/messages",
     "method": "POST",
+    "authType": 1,
     "status": 1,
     "permission": {
       "id": "200",
       "scope": "api:im:send-message",
       "status": 1
-    },
-  "page": null
-},
+    }
+  },
   "messageZh": "API 注册成功，等待审批",
   "messageEn": "Error"
 }
@@ -715,6 +777,7 @@
 {
   "nameCn": "发送消息V2",
   "nameEn": "Send Message V2",
+  "authType": 2,
   "categoryId": "2",
   "permission": {
     "nameCn": "发送消息权限V2",
@@ -736,6 +799,7 @@
   "data": {
     "id": "100",
     "nameCn": "发送消息V2",
+    "authType": 2,
     "status": 1,
     "message": "API 更新成功，核心属性变更需重新审批"
   },
@@ -1285,6 +1349,7 @@
         "api": {
           "path": "/api/v1/messages",
           "method": "POST",
+          "authType": 1,
           "docUrl": "https://docs.example.com/api/send-message"
         },
         "category": {
@@ -1352,6 +1417,7 @@
         "api": {
           "path": "/api/v1/messages",
           "method": "POST",
+          "authType": 1,
           "docUrl": "https://docs.example.com/api/send-message"
         }
       }
@@ -1460,10 +1526,12 @@
         "permissionId": "201",
         "permission": {
           "nameCn": "消息接收权限",
-          "scope": "event:im:message-received"
+          "scope": "event:im:message-received",
+          "docUrl": "https://docs.example.com/event/message-received"
         },
         "event": {
-          "topic": "im.message.received"
+          "topic": "im.message.received",
+          "docUrl": "https://docs.example.com/event/message-received"
         },
         "category": {
           "id": "2",
@@ -1471,7 +1539,12 @@
           "path": "/1/2/",
           "categoryPath": ["A类应用权限", "IM业务"]
         },
+        "approver": {
+          "userId": "user001",
+          "userName": "张三"
+        },
         "status": 1,
+        "approvalUrl": "https://platform.example.com/approval/301",
         "channelType": 1,
         "channelAddress": "https://webhook.example.com/events",
         "authType": 0,
@@ -1609,8 +1682,13 @@
 |------|-----|------|
 | channel_type | 0 | 企业内部消息队列 |
 | channel_type | 1 | WebHook |
-| auth_type | 0 | 应用类凭证A |
-| auth_type | 1 | 应用类凭证B |
+| auth_type | 0 | Cookie |
+| auth_type | 1 | SOA |
+| auth_type | 2 | APIG |
+| auth_type | 3 | IAM |
+| auth_type | 4 | 免认证 |
+| auth_type | 5 | AKSK |
+| auth_type | 6 | CLITOKEN |
 
 **响应示例**：
 
@@ -1865,6 +1943,15 @@
 
 获取审批流程模板列表。
 
+**权限要求**：
+- 全局审批流程配置：需要超级管理员权限
+- 场景审批流程配置：需要平台运营管理员权限
+- 查询审批流程列表：所有用户都可以查询
+
+**配置界面**：
+- 全局审批流程：平台管理后台 → 审批流程管理 → 全局审批流程
+- 场景审批流程：平台管理后台 → 审批流程管理 → 场景审批流程列表
+
 **请求参数**：
 
 | 参数 | 类型 | 必填 | 说明 |
@@ -1883,19 +1970,23 @@
   "data": [
       {
         "id": "1",
-        "nameCn": "默认审批流",
-        "nameEn": "Default Approval Flow",
-        "code": "default",
-        "isDefault": 1,
-        "status": 1
+        "nameCn": "全局审批流",
+        "nameEn": "Global Approval Flow",
+        "code": "global",
+        "descriptionCn": "所有申请的平台级审批流程",
+        "descriptionEn": "Platform-level approval flow for all applications",
+        "status": 1,
+        "createTime": "2026-04-20T10:00:00.000Z"
       },
       {
         "id": "2",
-        "nameCn": "API注册审批流",
-        "nameEn": "API Registration Approval Flow",
-        "code": "api_register",
-        "isDefault": 0,
-        "status": 1
+        "nameCn": "API权限申请审批流",
+        "nameEn": "API Permission Apply Approval Flow",
+        "code": "api_permission_apply",
+        "descriptionCn": "API权限申请场景审批流程",
+        "descriptionEn": "Approval flow for API permission apply",
+        "status": 1,
+        "createTime": "2026-04-20T10:00:00.000Z"
       }
     
   ],
@@ -1905,7 +1996,6 @@
     "total": 5
   }
 }
-```
 ```
 
 ---
@@ -1922,16 +2012,19 @@
   "messageZh": "操作成功",
   "messageEn": "Success",
   "data": {
-    "id": "2",
-    "nameCn": "API注册审批流",
-    "nameEn": "API Registration Approval Flow",
-    "code": "api_register",
-    "isDefault": 0,
+    "id": "1",
+    "nameCn": "全局审批流",
+    "nameEn": "Global Approval Flow",
+    "code": "global",
+    "descriptionCn": "所有申请的平台级审批流程",
+    "descriptionEn": "Platform-level approval flow for all applications",
     "status": 1,
     "nodes": [
-      { "type": "approver", "userId": "user001", "userName": "张三", "order": 1 },
-      { "type": "approver", "userId": "user002", "userName": "李四", "order": 2 }
-    ]
+      { "type": "approver", "userId": "admin001", "userName": "系统管理员", "order": 1 },
+      { "type": "approver", "userId": "admin002", "userName": "平台管理员", "order": 2 }
+    ],
+    "createTime": "2026-04-20T10:00:00.000Z",
+    "createBy": "system"
   },
   "page": null
 }
@@ -1943,15 +2036,24 @@
 
 创建审批流程模板。
 
+**权限要求**：
+- 全局审批流程配置：需要超级管理员权限
+- 场景审批流程配置：需要平台运营管理员权限
+
+**配置界面**：
+- 全局审批流程：平台管理后台 → 审批流程管理 → 全局审批流程
+- 场景审批流程：平台管理后台 → 审批流程管理 → 场景审批流程列表
+
 **请求体**：
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | name_cn | string | 是 | 中文名称 |
 | name_en | string | 是 | 英文名称 |
-| code | string | 是 | 流程编码，全局唯一 |
-| is_default | int | 否 | 是否默认流程（0=否, 1=是） |
-| nodes | array | 是 | 审批节点列表 |
+| code | string | 是 | 流程编码：global=全局审批, api_register=API注册审批, event_register=事件注册审批, callback_register=回调注册审批, api_permission_apply=API权限申请审批, event_permission_apply=事件权限申请审批, callback_permission_apply=回调权限申请审批 |
+| description_cn | string | 否 | 中文描述 |
+| description_en | string | 否 | 英文描述 |
+| nodes | array | 是 | 审批节点列表（JSON数组，存储为VARCHAR字符串） |
 
 **nodes 数组元素**：
 
@@ -1959,18 +2061,37 @@
 |------|------|------|------|
 | type | string | 是 | 节点类型（approver=审批人） |
 | user_id | string | 是 | 审批人ID |
+| user_name | string | 是 | 审批人姓名 |
 | order | int | 是 | 节点顺序 |
 
 ```json
 {
-  "nameCn": "API注册审批流",
-  "nameEn": "API Registration Approval Flow",
-  "code": "api_register",
-  "isDefault": 0,
+  "nameCn": "API权限申请审批流",
+  "nameEn": "API Permission Apply Approval Flow",
+  "code": "api_permission_apply",
+  "descriptionCn": "API权限申请场景审批流程",
+  "descriptionEn": "Approval flow for API permission apply",
   "nodes": [
-    { "type": "approver", "userId": "user001", "order": 1 },
-    { "type": "approver", "userId": "user002", "order": 2 }
+    { "type": "approver", "userId": "perm_admin", "userName": "权限管理员", "order": 1 }
   ]
+}
+```
+
+**响应示例**：
+
+```json
+{
+  "code": "200",
+  "messageZh": "操作成功",
+  "messageEn": "Success",
+  "data": {
+    "id": "3",
+    "nameCn": "API权限申请审批流",
+    "nameEn": "API Permission Apply Approval Flow",
+    "code": "api_permission_apply",
+    "status": 1
+  },
+  "page": null
 }
 ```
 
@@ -1980,14 +2101,41 @@
 
 更新审批流程模板。
 
+**权限要求**：
+- 全局审批流程配置：需要超级管理员权限
+- 场景审批流程配置：需要平台运营管理员权限
+
+**配置界面**：
+- 全局审批流程：平台管理后台 → 审批流程管理 → 全局审批流程
+- 场景审批流程：平台管理后台 → 审批流程管理 → 场景审批流程列表
+
 **请求体**：
 
 ```json
 {
-  "nameCn": "API注册审批流V2",
+  "nameCn": "权限申请审批流V2",
+  "descriptionCn": "权限申请场景审批流程（更新）",
   "nodes": [
-    { "type": "approver", "userId": "user003", "order": 1 }
+    { "type": "approver", "userId": "perm_admin", "userName": "权限管理员", "order": 1 },
+    { "type": "approver", "userId": "security_admin", "userName": "安全管理员", "order": 2 }
   ]
+}
+```
+
+**响应示例**：
+
+```json
+{
+  "code": "200",
+  "messageZh": "操作成功",
+  "messageEn": "Success",
+  "data": {
+    "id": "3",
+    "nameCn": "权限申请审批流V2",
+    "status": 1,
+    "message": "审批流程模板更新成功"
+  },
+  "page": null
 }
 ```
 
@@ -2003,7 +2151,7 @@
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| type | string | 否 | 审批类型（resource_register=资源注册, permission_apply=权限申请） |
+| type | string | 否 | 审批类型（resource_register=资源注册, api_permission_apply=API权限申请, event_permission_apply=事件权限申请, callback_permission_apply=回调权限申请） |
 | keyword | string | 否 | 搜索关键词（业务名称、申请人） |
 | curPage | int | 否 | 当前页码，默认 1 |
 | pageSize | int | 否 | 每页数量，默认 20 |
@@ -2064,11 +2212,24 @@
     "applicantId": "user003",
     "applicantName": "王五",
     "status": 0,
-    "flowId": "2",
     "currentNode": 1,
-    "nodes": [
-      { "order": 1, "userId": "user001", "userName": "张三", "status": 0 },
-      { "order": 2, "userId": "user002", "userName": "李四", "status": null }
+    "combinedNodes": [
+      { 
+        "type": "approver", 
+        "userId": "user001", 
+        "userName": "张三", 
+        "order": 1, 
+        "level": "scene",
+        "status": 0 
+      },
+      { 
+        "type": "approver", 
+        "userId": "user002", 
+        "userName": "李四", 
+        "order": 2, 
+        "level": "global",
+        "status": null 
+      }
     ],
     "logs": []
   },
