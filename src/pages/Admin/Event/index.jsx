@@ -10,6 +10,7 @@ import {
   Popconfirm,
   Empty,
   Spin,
+  Pagination,
   message,
 } from 'antd';
 import {
@@ -17,12 +18,13 @@ import {
   EditOutlined,
   DeleteOutlined,
   EyeOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import { fetchEventList, deleteEvent } from './thunk';
 import { fetchCategoryTree } from '../Category/thunk';
 import EventRegister from './EventRegister';
 import { STATUS_MAP, getEventListColumns } from './constants';
-import { INIT_PAGINATION } from '../../../utils/constants';
+import { INIT_PAGECONFIG } from '../../../utils/constants';
 import './EventList.m.less';
 
 const { Search } = Input;
@@ -30,7 +32,7 @@ const { Search } = Input;
 function EventList() {
   const [loading, setLoading] = useState(false);
   const [eventList, setEventList] = useState([]);
-  const [pagination, setPagination] = useState(INIT_PAGINATION);
+  const [pagination, setPagination] = useState(INIT_PAGECONFIG);
   const [keyword, setKeyword] = useState('');
   const [categoryId, setCategoryId] = useState(undefined);
   const [status, setStatus] = useState(undefined);
@@ -66,17 +68,17 @@ function EventList() {
     const finalKeyword = 'keyword' in params ? params.keyword : keyword;
     const finalCategoryId = 'categoryId' in params ? params.categoryId : categoryId;
     const finalStatus = 'status' in params ? params.status : status;
-    
+    const finalPage = 'curPage' in params ? params.curPage : pagination.curPage;
+    const finalSize = 'pageSize' in params ? params.pageSize : pagination.pageSize;
+
     const requestParams = {
       keyword: finalKeyword,
       categoryId: finalCategoryId,
       status: finalStatus,
+      curPage: finalPage,
+      pageSize: finalSize,
     };
-    
-    if (params.curPage !== undefined) {
-      requestParams.curPage = params.curPage;
-    }
-    
+
     const filteredParams = Object.fromEntries(
       Object.entries(requestParams).filter(([_, value]) => value !== undefined)
     );
@@ -84,13 +86,17 @@ function EventList() {
     const result = await fetchEventList(filteredParams);
     if (result.code === '200') {
       setEventList(result.data);
-      setPagination(prev => ({ ...prev, total: result.page?.total || 0 }));
+      setPagination(prev => ({ ...prev, total: result.page?.total || 0, curPage: finalPage, pageSize: finalSize }));
     }
     setLoading(false);
   };
 
   const handleSearch = () => {
-    loadData();
+    loadData({ curPage: 1 });
+  };
+
+  const handlePageChange = (page, size) => {
+    loadData({ curPage: page, pageSize: size });
   };
 
   const handleAdd = () => {
@@ -135,6 +141,11 @@ function EventList() {
 
   const renderTopic = (text) => <code>{text}</code>;
 
+  const renderScope = (permission) => {
+    const scope = permission?.scope || '-';
+    return <Tag color="cyan">{scope}</Tag>;
+  };
+
   const renderStatus = (status) => {
     const { text, color } = STATUS_MAP[status] || STATUS_MAP[0];
     return <Tag color={color}>{text}</Tag>;
@@ -145,6 +156,16 @@ function EventList() {
       <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => handleView(record)}>
         详情
       </Button>
+      {record.docUrl && (
+        <Button
+          type="link"
+          size="small"
+          icon={<FileTextOutlined />}
+          onClick={() => window.open(record.docUrl, '_blank')}
+        >
+          文档
+        </Button>
+      )}
       <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
         编辑
       </Button>
@@ -164,6 +185,7 @@ function EventList() {
   const columns = getEventListColumns({
     renderEventName,
     renderTopic,
+    renderScope,
     renderStatus,
     renderAction,
   });
@@ -182,58 +204,68 @@ function EventList() {
 
       <div className="toolbar">
         <Search
-            placeholder="搜索事件名称"
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            style={{ width: 200 }}
-            onSearch={handleSearch}
-          />
-          <TreeSelect
-            placeholder="选择分类"
-            value={categoryId}
-            onChange={(value) => {
-              setCategoryId(value);
-              loadData({ categoryId: value });
-            }}
-            treeData={convertToTreeData(categories)}
-            treeDefaultExpandAll
-            allowClear
-            style={{ width: 150 }}
-            dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
-          />
-          <Select
-            placeholder="选择状态"
-            value={status}
-            onChange={(value) => {
-              setStatus(value);
-              loadData({ status: value });
-            }}
-            style={{ width: 120 }}
-            allowClear
-          >
-            <Select.Option value={0}>草稿</Select.Option>
-            <Select.Option value={1}>待审</Select.Option>
-            <Select.Option value={2}>已发布</Select.Option>
-            <Select.Option value={3}>已下线</Select.Option>
-          </Select>
-        </div>
+          placeholder="搜索事件名称"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          style={{ width: 200 }}
+          onSearch={handleSearch}
+        />
+        <TreeSelect
+          placeholder="选择分类"
+          value={categoryId}
+          onChange={(value) => {
+            setCategoryId(value);
+            loadData({ categoryId: value });
+          }}
+          treeData={convertToTreeData(categories)}
+          treeDefaultExpandAll
+          allowClear
+          style={{ width: 150 }}
+          dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+        />
+        <Select
+          placeholder="选择状态"
+          value={status}
+          onChange={(value) => {
+            setStatus(value);
+            loadData({ status: value });
+          }}
+          style={{ width: 120 }}
+          allowClear
+        >
+          <Select.Option value={0}>草稿</Select.Option>
+          <Select.Option value={1}>待审</Select.Option>
+          <Select.Option value={2}>已发布</Select.Option>
+          <Select.Option value={3}>已下线</Select.Option>
+        </Select>
+      </div>
 
-        <Spin spinning={loading}>
-          {eventList.length > 0 ? (
+      <Spin spinning={loading}>
+        {eventList.length > 0 ? (
+          <>
             <Table
               columns={columns}
               dataSource={eventList}
               rowKey="id"
-              pagination={{
-                total: pagination.total,
-                pageSize: pagination.pageSize,
-                onChange: (page) => loadData({ curPage: page }),
-              }}
+              pagination={false}
             />
-          ) : (
-            <Empty description="暂无事件数据" />
-          )}
-        </Spin>
+            <div style={{ marginTop: 16, textAlign: 'right' }}>
+              <Pagination
+                total={pagination.total}
+                current={pagination.curPage}
+                pageSize={pagination.pageSize}
+                pageSizeOptions={[10, 20, 50]}
+                showSizeChanger
+                showQuickJumper
+                showTotal={(total) => `共 ${pagination.total} 条`}
+                onChange={handlePageChange}
+              />
+            </div>
+          </>
+        ) : (
+          <Empty description="暂无事件数据" />
+        )}
+      </Spin>
 
       <EventRegister
         visible={modalVisible}

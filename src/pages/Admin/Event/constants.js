@@ -16,35 +16,42 @@ export const EVENT_PROPERTY_PRESETS = [
 export const getEventListColumns = ({
   renderEventName,
   renderTopic,
+  renderScope,
   renderStatus,
   renderAction,
 }) => [
-  {
-    title: '事件名称',
-    dataIndex: 'nameCn',
-    key: 'nameCn',
-    render: renderEventName,
-  },
-  {
-    title: '分类',
-    dataIndex: 'categoryName',
-    key: 'categoryName',
-  },
-  {
-    title: 'Topic',
-    dataIndex: 'topic',
-    key: 'topic',
-    render: renderTopic,
-  },
-  {
-    title: '状态',
-    dataIndex: 'status',
-    key: 'status',
-    render: renderStatus,
-  },
-  {
-    title: '操作',
-    key: 'action',
-    render: renderAction,
-  },
-];
+    {
+      title: '事件名称',
+      dataIndex: 'nameCn',
+      key: 'nameCn',
+      render: renderEventName,
+    },
+    {
+      title: '分类',
+      dataIndex: 'categoryName',
+      key: 'categoryName',
+    },
+    {
+      title: 'Topic',
+      dataIndex: 'topic',
+      key: 'topic',
+      render: renderTopic,
+    },
+    {
+      title: 'Scope',
+      dataIndex: 'permission',
+      key: 'scope',
+      render: renderScope,
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      render: renderStatus,
+    },
+    {
+      title: '操作',
+      key: 'action',
+      render: renderAction,
+    },
+  ];

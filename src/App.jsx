@@ -7,7 +7,7 @@ import BasicInfo from './pages/BasicInfo/BasicInfo';
 import Members from './pages/Members/Members';
 import Capabilities from './pages/Capabilities/Capabilities';
 import CapabilityDetail from './pages/CapabilityDetail/CapabilityDetail';
-import ApiManagement from './pages/ApiManagement';
+import ApiManagement from './pages/ApiManagement/index';
 import Events from './pages/Events/index';
 import Callbacks from './pages/Callbacks/index';
 import VersionRelease from './pages/VersionRelease/VersionRelease';

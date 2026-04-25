@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Drawer, Table, Button, Pagination, Tag, message } from 'antd';
 import { fetchAllCallbacks } from './thunk';
-import { PAGE_SIZE_OPTIONS, INIT_PAGINATION } from '../../utils/constants';
+import { PAGE_SIZE_OPTIONS, INIT_PAGECONFIG } from '../../utils/constants';
 import { openUrl } from '../../utils/common';
 import { getCallbackDrawerColumns } from './constants';
 import './CallbackDrawer.m.less';
 
-function CallbackDrawer({ open, onClose, onConfirm, selectedCallbacks = [], subscribeLoading = false }) {
+function CallbackDrawer({ open, onClose, onConfirm, selectedCallbacks = [], subscribeLoading = false, appId }) {
   const [selectedRowKeys, setSelectedRowKeys] = useState(
     selectedCallbacks.map(c => c.id)
   );
-  const [pagination, setPagination] = useState(INIT_PAGINATION);
+  const [pagination, setPagination] = useState(INIT_PAGECONFIG);
   const [allCallbacks, setAllCallbacks] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +20,7 @@ function CallbackDrawer({ open, onClose, onConfirm, selectedCallbacks = [], subs
   const loadData = async (page = pagination.curPage, size = pagination.pageSize) => {
     setLoading(true);
     try {
-      const result = await fetchAllCallbacks({ curPage: page, pageSize: size });
+      const result = await fetchAllCallbacks({ curPage: page, pageSize: size, appId });
       if (result && result.code === '200') {
         setAllCallbacks(result.data || []);
         setPagination(prev => ({
@@ -55,12 +55,12 @@ function CallbackDrawer({ open, onClose, onConfirm, selectedCallbacks = [], subs
   };
 
   const handleConfirm = () => {
-    const selected = allCallbacks.filter(callback => 
+    const selected = allCallbacks.filter(callback =>
       selectedRowKeys.includes(callback.id)
     );
     onConfirm(selected);
     setSelectedRowKeys([]);
-    setPagination(INIT_PAGINATION);
+    setPagination(INIT_PAGECONFIG);
     onClose();
   };
 
@@ -76,10 +76,17 @@ function CallbackDrawer({ open, onClose, onConfirm, selectedCallbacks = [], subs
 
   const renderNeedApproval = (needApproval, record) => {
     const val = needApproval !== undefined ? needApproval : record.needReview;
-    return val ? 
-      <Tag color="orange">需要审核</Tag> : 
+    return val ?
+      <Tag color="orange">需要审核</Tag> :
       <Tag color="green">无需审核</Tag>;
   };
+
+  const renderIsSubScribed = (isSubscribed) => {
+    if (isSubscribed === 1) {
+      return <Tag color="success">已订阅</Tag>;
+    }
+    return <Tag color="default">未订阅</Tag>;
+  }
 
   const renderAction = (_, record) => {
     const docUrl = record.callback?.docUrl || record.docUrl;
@@ -93,12 +100,16 @@ function CallbackDrawer({ open, onClose, onConfirm, selectedCallbacks = [], subs
   const columns = getCallbackDrawerColumns({
     renderCallbackName,
     renderNeedApproval,
+    renderIsSubScribed,
     renderAction,
   });
 
   const rowSelection = {
     selectedRowKeys,
     onChange: handleSelectChange,
+    getCheckboxProps: (record) => ({
+      disabled: record.isSubscribed === 1,
+    }),
   };
 
   return (
@@ -112,8 +123,8 @@ function CallbackDrawer({ open, onClose, onConfirm, selectedCallbacks = [], subs
       footer={
         <div className="drawer-footer">
           <Button onClick={onClose}>取消</Button>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             disabled={selectedRowKeys.length === 0 || subscribeLoading}
             loading={subscribeLoading}
             onClick={handleConfirm}

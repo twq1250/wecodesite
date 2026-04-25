@@ -4,7 +4,7 @@ import { fetchAppApis, subscribeApis, withdrawApiApplication, remindApproval } f
 import { fetchAppInfo } from '../BasicInfo/thunk';
 import ApiPermissionDrawer from './ApiPermissionDrawer';
 import ApprovalAddressModal from '../../components/ApprovalAddressModal/ApprovalAddressModal';
-import { SUBSCRIPTION_STATUS, AUTH_TYPE, PAGE_SIZE_OPTIONS, INIT_PAGINATION } from '../../utils/constants';
+import { SUBSCRIPTION_STATUS, AUTH_TYPE, PAGE_SIZE_OPTIONS, INIT_PAGECONFIG } from '../../utils/constants';
 import { getApiManagementColumns } from './constants';
 import { openUrl, queryParams } from '../../utils/common';
 import './ApiManagement.m.less';
@@ -30,7 +30,7 @@ function ApiManagement() {
   // 当前待审批记录信息
   const [currentApprovalInfo, setCurrentApprovalInfo] = useState({});
   // 分页配置对象
-  const [pagination, setPagination] = useState(INIT_PAGINATION);
+  const [pagination, setPagination] = useState(INIT_PAGECONFIG);
 
   /**
    * 加载应用信息
@@ -85,18 +85,21 @@ function ApiManagement() {
    * 确认开通权限后的回调处理
    */
   const handleConfirmPermission = async (selectedApis) => {
-    const permissionIds = selectedApis.map(api => api.id);
-    
+    // 权限ID直接是 api.id，不再嵌套在 permission 对象中
+    const permissionIds = selectedApis
+      .filter(api => api.id)
+      .map(api => api.id);
+
     if (permissionIds.length === 0) {
       message.warning('没有可订阅的权限');
       return;
     }
-    
+
     const result = await subscribeApis(appId, { permissionIds });
     if (result && result.code === '200') {
       message.success('申请已提交');
       setDrawerOpen(false);
-      loadApis(1, INIT_PAGINATION.pageSize);
+      loadApis(1, INIT_PAGECONFIG.pageSize);
     } else {
       message.error(result?.message || '订阅失败');
     }
@@ -181,10 +184,10 @@ function ApiManagement() {
       </div>
 
       {/* API列表表格 */}
-      <Table 
-        columns={columns} 
-        dataSource={apis} 
-        rowKey="id" 
+      <Table
+        columns={columns}
+        dataSource={apis}
+        rowKey="id"
         pagination={false}
         loading={loading}
       />
@@ -211,6 +214,7 @@ function ApiManagement() {
         onClose={() => setDrawerOpen(false)}
         onConfirm={handleConfirmPermission}
         appType={appType}
+        appId={appId}
       />
 
       {/* 审批地址弹窗组件 */}

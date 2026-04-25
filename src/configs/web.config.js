@@ -76,6 +76,7 @@ export const API_CONFIG = {
     DETAIL: '/approval-flows/{id}',
     CREATE: '/approval-flows',
     UPDATE: '/approval-flows/{id}',
+    DELETE: '/approval-flows/{id}',
   },
 };
 
@@ -96,6 +97,7 @@ export const fetchApi = async (url, options = {}) => {
   }
   const response = await fetch(fullUrl, {
     ...fetchOptions,
+    credentials: 'include',  // 确保请求携带 Cookie
     headers: {
       'Content-Type': 'application/json',
       ...fetchOptions.headers,

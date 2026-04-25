@@ -5,7 +5,7 @@ import CallbackDrawer from './CallbackDrawer';
 import CallbackConfigDrawer from './CallbackConfigDrawer';
 import ApprovalAddressModal from '../../components/ApprovalAddressModal/ApprovalAddressModal';
 import DeleteConfirmModal from '../../components/DeleteConfirmModal/DeleteConfirmModal';
-import { SUBSCRIPTION_STATUS, CALLBACK_CHANNEL_TYPE, PAGE_SIZE_OPTIONS, INIT_PAGINATION } from '../../utils/constants';
+import { SUBSCRIPTION_STATUS, CALLBACK_CHANNEL_TYPE, PAGE_SIZE_OPTIONS, INIT_PAGECONFIG } from '../../utils/constants';
 import { queryParams, openUrl } from '../../utils/common';
 import { getCallbackColumns } from './constants';
 import './Callbacks.m.less';
@@ -14,7 +14,7 @@ function Callbacks() {
   const appId = queryParams('appId');
   const [callbacks, setCallbacks] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState(INIT_PAGINATION);
+  const [pagination, setPagination] = useState(INIT_PAGECONFIG);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [configDrawerOpen, setConfigDrawerOpen] = useState(false);
   const [editingCallback, setEditingCallback] = useState(null);
@@ -74,7 +74,7 @@ function Callbacks() {
       const res = await subscribeCallbacks(appId, { permissionIds });
       if (res && res.code === '200') {
         message.success('申请已提交');
-        loadCallbacks(1, INIT_PAGINATION.pageSize);
+        loadCallbacks(1, INIT_PAGECONFIG.pageSize);
         setDrawerOpen(false);
       } else {
         message.error(res?.message || '申请失败');
@@ -254,6 +254,7 @@ function Callbacks() {
         approver={currentApprovalInfo.approver}
         approvalUrl={currentApprovalInfo.approvalUrl}
         onRemind={() => remindApproval(currentApprovalInfo.id)}
+        appId={appId}
       />
 
       <DeleteConfirmModal

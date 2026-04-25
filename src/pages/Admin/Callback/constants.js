@@ -16,29 +16,36 @@ export const CALLBACK_PROPERTY_PRESETS = [
 
 export const getCallbackListColumns = ({
   renderCallbackName,
+  renderScope,
   renderStatus,
   renderAction,
 }) => [
-  {
-    title: '回调名称',
-    dataIndex: 'nameCn',
-    key: 'nameCn',
-    render: renderCallbackName,
-  },
-  {
-    title: '分类',
-    dataIndex: 'categoryName',
-    key: 'categoryName',
-  },
-  {
-    title: '状态',
-    dataIndex: 'status',
-    key: 'status',
-    render: renderStatus,
-  },
-  {
-    title: '操作',
-    key: 'action',
-    render: renderAction,
-  },
-];
+    {
+      title: '回调名称',
+      dataIndex: 'nameCn',
+      key: 'nameCn',
+      render: renderCallbackName,
+    },
+    {
+      title: '分类',
+      dataIndex: 'categoryName',
+      key: 'categoryName',
+    },
+    {
+      title: 'Scope',
+      dataIndex: 'permission',
+      key: 'scope',
+      render: renderScope,
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      render: renderStatus,
+    },
+    {
+      title: '操作',
+      key: 'action',
+      render: renderAction,
+    },
+  ];

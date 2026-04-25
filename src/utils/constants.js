@@ -10,45 +10,6 @@ export const INIT_PAGECONFIG = {
   total: 0,
 }
 
-export const INIT_PAGINATION = {
-  pageSize: 10,
-  curPage: 1,
-  total: 0,
-}
-
-export const PAGE_CONFIGS = {
-  apiManagement: {
-    ...INIT_PAGECONFIG,
-    title: 'API管理',
-    key: 'apiManagement',
-  },
-  callbacks: {
-    ...INIT_PAGECONFIG,
-    title: '回调配置',
-    key: 'callbacks',
-  },
-  events: {
-    ...INIT_PAGECONFIG,
-    title: '事件配置',
-    key: 'events',
-  },
-  adminApi: {
-    ...INIT_PAGECONFIG,
-    title: 'API管理',
-    key: 'adminApi',
-  },
-  adminCallback: {
-    ...INIT_PAGECONFIG,
-    title: '回调管理',
-    key: 'adminCallback',
-  },
-  adminEvent: {
-    ...INIT_PAGECONFIG,
-    title: '事件管理',
-    key: 'adminEvent',
-  },
-};
-
 export const SUBSCRIPTION_STATUS = {
   0: { text: '审核中', color: 'orange' },
   1: { text: '已审核', color: 'green' },

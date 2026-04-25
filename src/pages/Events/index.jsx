@@ -5,7 +5,7 @@ import EventDrawer from './EventDrawer';
 import EventSubscriptionDrawer from './EventSubscriptionDrawer';
 import ApprovalAddressModal from '../../components/ApprovalAddressModal/ApprovalAddressModal';
 import DeleteConfirmModal from '../../components/DeleteConfirmModal/DeleteConfirmModal';
-import { SUBSCRIPTION_STATUS, EVENT_CHANNEL_TYPE, PAGE_SIZE_OPTIONS, INIT_PAGINATION } from '../../utils/constants';
+import { SUBSCRIPTION_STATUS, EVENT_CHANNEL_TYPE, PAGE_SIZE_OPTIONS, INIT_PAGECONFIG } from '../../utils/constants';
 import { queryParams, openUrl } from '../../utils/common';
 import { getEventColumns } from './constants';
 import './Events.m.less';
@@ -14,7 +14,7 @@ function Events() {
   const appId = queryParams('appId');
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState(INIT_PAGINATION);
+  const [pagination, setPagination] = useState(INIT_PAGECONFIG);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [subscriptionDrawerOpen, setSubscriptionDrawerOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
@@ -74,7 +74,7 @@ function Events() {
       const res = await subscribeEvents(appId, { permissionIds });
       if (res && res.code === '200') {
         message.success('申请已提交');
-        loadEvents(1, INIT_PAGINATION.pageSize);
+        loadEvents(1, INIT_PAGECONFIG.pageSize);
         setDrawerOpen(false);
       } else {
         message.error(res?.message || '申请失败');
@@ -239,6 +239,7 @@ function Events() {
         onConfirm={handleAddEvent}
         selectedEvents={events}
         subscribeLoading={subscribeLoading}
+        appId={appId}
       />
 
       <EventSubscriptionDrawer

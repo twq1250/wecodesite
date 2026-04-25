@@ -76,6 +76,7 @@ export const getApiListColumns = ({
   renderPath,
   renderMethod,
   renderAuthType,
+  renderScope,
   renderStatus,
   renderAction,
 }) => [
@@ -108,6 +109,12 @@ export const getApiListColumns = ({
     key: 'authType',
     render: renderAuthType,
   },
+    {
+      title: 'Scope',
+      dataIndex: 'permission',
+      key: 'scope',
+      render: renderScope,
+    },
   {
     title: '状态',
     dataIndex: 'status',

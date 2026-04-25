@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Drawer, Table, Button, Pagination, Tag, message } from 'antd';
 import { fetchAllEvents } from './thunk';
-import { PAGE_SIZE_OPTIONS, INIT_PAGINATION } from '../../utils/constants';
+import { PAGE_SIZE_OPTIONS, INIT_PAGECONFIG } from '../../utils/constants';
 import { openUrl } from '../../utils/common';
 import { getEventDrawerColumns } from './constants';
 import './EventDrawer.m.less';
 
-function EventDrawer({ open, onClose, onConfirm, selectedEvents = [], subscribeLoading = false }) {
+function EventDrawer({ open, onClose, onConfirm, selectedEvents = [], subscribeLoading = false, appId }) {
   const [selectedRowKeys, setSelectedRowKeys] = useState(
     selectedEvents.map(e => e.id)
   );
-  const [pagination, setPagination] = useState(INIT_PAGINATION);
+  const [pagination, setPagination] = useState(INIT_PAGECONFIG);
   const [allEvents, setAllEvents] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +20,7 @@ function EventDrawer({ open, onClose, onConfirm, selectedEvents = [], subscribeL
   const loadData = async (page = pagination.curPage, size = pagination.pageSize) => {
     setLoading(true);
     try {
-      const result = await fetchAllEvents({ curPage: page, pageSize: size });
+      const result = await fetchAllEvents({ curPage: page, pageSize: size, appId });
       if (result && result.code === '200') {
         setAllEvents(result.data || []);
         setPagination(prev => ({
@@ -55,12 +55,12 @@ function EventDrawer({ open, onClose, onConfirm, selectedEvents = [], subscribeL
   };
 
   const handleConfirm = () => {
-    const selected = allEvents.filter(event => 
+    const selected = allEvents.filter(event =>
       selectedRowKeys.includes(event.id)
     );
     onConfirm(selected);
     setSelectedRowKeys([]);
-    setPagination(INIT_PAGINATION);
+    setPagination(INIT_PAGECONFIG);
     onClose();
   };
 
@@ -76,10 +76,17 @@ function EventDrawer({ open, onClose, onConfirm, selectedEvents = [], subscribeL
 
   const renderNeedApproval = (needApproval, record) => {
     const val = needApproval !== undefined ? needApproval : record.needReview;
-    return val ? 
-      <Tag color="orange">需要审核</Tag> : 
+    return val ?
+      <Tag color="orange">需要审核</Tag> :
       <Tag color="green">无需审核</Tag>;
   };
+
+  const renderIsSubScribed = (isSubscribed) => {
+    if (isSubscribed === 1) {
+      return <Tag color="success">已订阅</Tag>;
+    }
+    return <Tag color="default">未订阅</Tag>;
+  }
 
   const renderAction = (_, record) => {
     const docUrl = record.event?.docUrl || record.docUrl;
@@ -93,12 +100,16 @@ function EventDrawer({ open, onClose, onConfirm, selectedEvents = [], subscribeL
   const columns = getEventDrawerColumns({
     renderEventName,
     renderNeedApproval,
+    renderIsSubScribed,
     renderAction,
   });
 
   const rowSelection = {
     selectedRowKeys,
     onChange: handleSelectChange,
+    getCheckboxProps: (record) => ({
+      disabled: record.isSubscribed === 1,  // 已订阅的事件禁用勾选
+    }),
   };
 
   return (
@@ -112,8 +123,8 @@ function EventDrawer({ open, onClose, onConfirm, selectedEvents = [], subscribeL
       footer={
         <div className="drawer-footer">
           <Button onClick={onClose}>取消</Button>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             disabled={selectedRowKeys.length === 0 || subscribeLoading}
             loading={subscribeLoading}
             onClick={handleConfirm}

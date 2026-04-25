@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Drawer, Tabs, Table, Button, Tag, Pagination, Input, Select, message } from 'antd';
 import { fetchApis, fetchCategories } from './thunk';
 import { mockFeatureFlag } from './mock';
-import { AUTH_TYPE, PAGE_SIZE_OPTIONS, INIT_PAGINATION } from '../../utils/constants';
+import { AUTH_TYPE, PAGE_SIZE_OPTIONS, INIT_PAGECONFIG } from '../../utils/constants';
 import { openUrl } from '../../utils/common';
 import {
   NEED_REVIEW_OPTIONS,
@@ -57,8 +57,9 @@ const transformCategoriesToModules = (categories) => {
  * @param {Function} onClose - 关闭抽屉回调
  * @param {Function} onConfirm - 确认开通权限回调
  * @param {string} appType - 应用类型：'business'或'personal'
+ * @param {string} appId - 应用ID
  */
-function ApiPermissionDrawer({ open, onClose, onConfirm, appType = 'business' }) {
+function ApiPermissionDrawer({ open, onClose, onConfirm, appType = 'business', appId }) {
   // 是否启用身份权限功能开关（仅控制第一层Tab是否显示）
   const enableIdentityPermission = mockFeatureFlag.enableIdentityPermission;
 
@@ -71,7 +72,7 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appType = 'business' })
   // 表格选中行的key数组
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   // 分页配置对象
-  const [pagination, setPagination] = useState(INIT_PAGINATION);
+  const [pagination, setPagination] = useState(INIT_PAGECONFIG);
   // API列表数据
   const [apisData, setApisData] = useState([]);
   // 模块列表数据（侧边栏）
@@ -136,6 +137,7 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appType = 'business' })
       categoryId: currentCategoryId,
       curPage: pagination.curPage,
       pageSize: pagination.pageSize,
+      appId: appId,
       ...params
     };
     
@@ -172,7 +174,7 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appType = 'business' })
     setActiveModule('all');
     setFilterKeyword('');
     setFilterNeedReview('all');
-    setPagination(INIT_PAGINATION);
+    setPagination(INIT_PAGECONFIG);
     setSelectedRowKeys([]);
     
     const initData = async () => {
@@ -189,7 +191,7 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appType = 'business' })
    */
   const handleModuleClick = async (module) => {
     setActiveModule(module.key);
-    setPagination(INIT_PAGINATION);
+    setPagination(INIT_PAGECONFIG);
     setSelectedRowKeys([]);
     await loadApis({ curPage: 1 }, null, module.key);
   };
@@ -210,7 +212,7 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appType = 'business' })
     setActiveModule('all');
     setFilterKeyword('');
     setFilterNeedReview('all');
-    setPagination(INIT_PAGINATION);
+    setPagination(INIT_PAGECONFIG);
     setSelectedRowKeys([]);
     
     const modules = await loadModules(newApiType);
@@ -232,7 +234,7 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appType = 'business' })
     setActiveModule('all');
     setFilterKeyword('');
     setFilterNeedReview('all');
-    setPagination(INIT_PAGINATION);
+    setPagination(INIT_PAGECONFIG);
     setSelectedRowKeys([]);
     
     const modules = await loadModules(type);
@@ -277,7 +279,7 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appType = 'business' })
     const selectedApis = apisData.filter(api => selectedRowKeys.includes(api.id));
     onConfirm(selectedApis);
     setSelectedRowKeys([]);
-    setPagination(INIT_PAGINATION);
+    setPagination(INIT_PAGECONFIG);
     onClose();
   };
 
@@ -287,7 +289,7 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appType = 'business' })
   const handleFilterChange = async (e) => {
     const keyword = e.target.value;
     setFilterKeyword(keyword);
-    setPagination(INIT_PAGINATION);
+    setPagination(INIT_PAGECONFIG);
     await loadApis({ keyword, curPage: 1 }, null, activeModule);
   };
 
@@ -296,7 +298,7 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appType = 'business' })
    */
   const handleNeedReviewChange = async (value) => {
     setFilterNeedReview(value);
-    setPagination(INIT_PAGINATION);
+    setPagination(INIT_PAGECONFIG);
     await loadApis({ needReview: value, curPage: 1 }, null, activeModule);
   };
 
@@ -329,6 +331,18 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appType = 'business' })
       },
     },
     {
+      title: '订阅状态',
+      dataIndex: 'isSubscribed',
+      key: 'isSubscribed',
+      width: 100,
+      render: (isSubscribed) => {
+        if (isSubscribed === 1) {
+          return <Tag color="success">已订阅</Tag>;
+        }
+        return <Tag color="default">未订阅</Tag>;
+      },
+    },
+    {
       title: '操作',
       key: 'action',
       render: (_, record) => {
@@ -346,6 +360,9 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appType = 'business' })
   const rowSelection = {
     selectedRowKeys,
     onChange: handleSelectChange,
+    getCheckboxProps: (record) => ({
+      disabled: record.isSubscribed === 1,  // 已订阅的权限禁用勾选
+    }),
   };
 
   /**
