@@ -1,5 +1,5 @@
-import { useTrueFetch } from '@/utils/constants';
-import { API_CONFIG, buildApiUrl, fetchApi } from '@/configs/web.config';
+import { useTrueFetch } from '../../utils/constants';
+import { API_CONFIG, buildApiUrl, fetchApi } from '../../configs/web.config';
 import { mockEvents, mockAllEvents } from './mock';
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

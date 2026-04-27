@@ -30,3 +30,8 @@ export default {
     layout: 'inner',
     component: () => import('./index'),
 }
+
+待办
+1.回调地址和事件地址要有校验
+2.import路径修改
+3.测试代码

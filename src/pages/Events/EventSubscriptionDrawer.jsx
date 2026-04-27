@@ -117,7 +117,10 @@ function EventSubscriptionDrawer({ open, onClose, onSave, event }) {
             <Form.Item
               name="channelAddress"
               label="请求地址"
-              rules={[{ required: true, message: '请输入请求地址' }]}
+              rules={[
+                { required: true, message: '请输入请求地址' },
+                { pattern: /^https?:\/\/.+/, message: '地址必须以 http:// 或 https:// 开头' }
+              ]}
             >
               <Input placeholder="https://your-domain.com/webhook" />
             </Form.Item>
