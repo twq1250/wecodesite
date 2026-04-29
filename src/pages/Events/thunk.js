@@ -88,6 +88,15 @@ export const deleteEvent = async (id) => {
   }
 };
 
+export const deleteAppEventSubscription = async (appId, subscriptionId) => {
+  try {
+    const result = await fetchApi(buildApiUrl(API_CONFIG.APP_EVENTS.DELETE, { appId, id: subscriptionId }), { method: 'DELETE' });
+    return result || {};
+  } catch (err) {
+    return {};
+  }
+};
+
 export const withdrawApproval = async (appId, id) => {
   try {
     const result = await fetchApi(buildApiUrl(API_CONFIG.APP_EVENTS.WITHDRAW, { appId, id }), { method: 'POST' });

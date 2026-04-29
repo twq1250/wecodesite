@@ -84,6 +84,15 @@ export const deleteCallback = async (id) => {
   }
 };
 
+export const deleteAppCallbackSubscription = async (appId, subscriptionId) => {
+  try {
+    const result = await fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.DELETE, { appId, id: subscriptionId }), { method: 'DELETE' });
+    return result || {};
+  } catch (err) {
+    return {};
+  }
+};
+
 export const withdrawApproval = async (appId, id) => {
   try {
     const result = await fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.WITHDRAW, { appId, id }), { method: 'POST' });

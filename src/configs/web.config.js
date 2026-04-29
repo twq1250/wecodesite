@@ -33,6 +33,7 @@ export const API_CONFIG = {
     LIST: '/apps/{appId}/apis',
     SUBSCRIBE: '/apps/{appId}/apis/subscribe',
     WITHDRAW: '/apps/{appId}/apis/{id}/withdraw',
+    DELETE: '/apps/{appId}/apis/{id}',
   },
 
   APP_EVENTS: {
@@ -40,6 +41,7 @@ export const API_CONFIG = {
     SUBSCRIBE: '/apps/{appId}/events/subscribe',
     CONFIG: '/apps/{appId}/events/{id}/config',
     WITHDRAW: '/apps/{appId}/events/{id}/withdraw',
+    DELETE: '/apps/{appId}/events/{id}',
   },
 
   APP_CALLBACKS: {
@@ -47,6 +49,7 @@ export const API_CONFIG = {
     SUBSCRIBE: '/apps/{appId}/callbacks/subscribe',
     CONFIG: '/apps/{appId}/callbacks/{id}/config',
     WITHDRAW: '/apps/{appId}/callbacks/{id}/withdraw',
+    DELETE: '/apps/{appId}/callbacks/{id}',
   },
 
   CATEGORIES: {
