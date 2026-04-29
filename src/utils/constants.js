@@ -34,8 +34,13 @@ export const CALLBACK_CHANNEL_TYPE = {
 };
 
 export const AUTH_TYPE = {
-  0: 'SOA',
-  1: 'APIG'
+  0: 'Cookie',
+  1: 'SOA',
+  2: 'APIG',
+  3: 'IAM',
+  4: '免认证',
+  5: 'AKSK',
+  6: 'CLITOKEN',
 };
 
 export const formatCategoryPath = (category) => {
@@ -51,9 +56,9 @@ export const getPermissionName = (permission) => {
 };
 
 export const ADMIN_MENU_CONFIG = [
+  { title: '分类列表', router: '/admin/categories' },
   { title: 'API列表', router: '/admin/apis' },
   { title: '事件列表', router: '/admin/events' },
   { title: '回调列表', router: '/admin/callbacks' },
-  { title: '分类列表', router: '/admin/categories' },
   { title: '审批中心', router: '/admin/approvals' }
 ];
