@@ -57,25 +57,33 @@ function ApprovalCenter() {
     setLoading(true);
     const finalPage = 'curPage' in params ? params.curPage : pagination.curPage;
     const finalSize = 'pageSize' in params ? params.pageSize : pagination.pageSize;
+    params.curPage = finalPage;
+    params.pageSize = finalSize;
     let result;
 
     if (activeTab === 'pending') {
       result = await fetchApprovalList({ status: 0, ...params });
-      if (result.code === '200') {
+      if (result && result.code === '200') {
         setApprovalList(result.data);
         setPagination(prev => ({ ...prev, total: result.page?.total || 0, curPage: finalPage, pageSize: finalSize }));
+      } else {
+        message.error(result?.message || '加载待审批列表失败');
       }
     } else if (activeTab === 'mine') {
       result = await fetchMyApprovals(params);
-      if (result.code === '200') {
+      if (result && result.code === '200') {
         setMyApprovals(result.data);
         setPagination(prev => ({ ...prev, total: result.page?.total || 0, curPage: finalPage, pageSize: finalSize }));
+      } else {
+        message.error(result?.message || '加载我发起的审批列表失败');
       }
     } else if (activeTab === 'all') {
       result = await fetchApprovalList(params);
-      if (result.code === '200') {
+      if (result && result.code === '200') {
         setApprovalList(result.data);
         setPagination(prev => ({ ...prev, total: result.page?.total || 0, curPage: finalPage, pageSize: finalSize }));
+      } else {
+        message.error(result?.message || '加载全部审批列表失败');
       }
     }
 
@@ -171,9 +179,7 @@ function ApprovalCenter() {
             {canViewFlowConfig && <TabPane key="flowConfig" tab="审批流程配置" />}
           </Tabs>
 
-          {activeTab === 'flowConfig' ? (
-            canViewFlowConfig ? <ApprovalFlowConfig /> : <Empty description="您没有权限访问审批流程配置" />
-          ) : (
+          {activeTab === 'flowConfig' ? <ApprovalFlowConfig /> : (
             <Spin spinning={loading}>
               {dataSource.length > 0 ? (
                 <>
