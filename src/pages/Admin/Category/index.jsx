@@ -1,23 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   Button,
-  Tree,
-  Form,
   Input,
-  Space,
-  Tag,
-  Empty,
-  Spin,
   message,
 } from 'antd';
-import {
-  EditOutlined,
-  DeleteOutlined,
-  UserOutlined,
-  FolderOutlined,
-  FileOutlined,
-  PlusOutlined,
-} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import {
   fetchCategoryTree,
@@ -31,6 +17,7 @@ import {
 import CategoryFormModal from '../../../components/CategoryFormModal/CategoryFormModal';
 import CategoryOwnerModal from '../../../components/CategoryOwnerModal/CategoryOwnerModal';
 import DeleteConfirmModal from '../../../components/DeleteConfirmModal/DeleteConfirmModal';
+import ModernCategoryTree from '../../../components/ModernCategoryTree/ModernCategoryTree';
 import { isInAdminWhitelist } from '../../../utils/common';
 import SimpleSidebar from '../../../components/SimpleSidebar/SimpleSidebar';
 import './CategoryList.m.less';
@@ -52,7 +39,6 @@ function CategoryList() {
   const [loading, setLoading] = useState(false);
   const [categoryTree, setCategoryTree] = useState([]);
   const [searchValue, setSearchValue] = useState('');
-  const [expandedKeys, setExpandedKeys] = useState([]);
   const [formModalVisible, setFormModalVisible] = useState(false);
   const [ownerModalVisible, setOwnerModalVisible] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -158,76 +144,12 @@ function CategoryList() {
     setParentCategory(null);
   };
 
-  const convertToTreeData = (categories) => {
-    if (!Array.isArray(categories)) return [];
-    return categories.map((category) => ({
-      key: category.id,
-      title: (
-        <div className="tree-node">
-          <span className="tree-node-title">
-            {category.categoryAlias && <Tag color="blue">{category.categoryAlias}</Tag>}
-            {category.nameCn}
-          </span>
-          <Space className="tree-node-actions">
-            <Button
-              type="link"
-              size="small"
-              icon={<PlusOutlined />}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAddChild(category);
-              }}
-            >
-              添加子分类
-            </Button>
-            <Button
-              type="link"
-              size="small"
-              icon={<EditOutlined />}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEdit(category);
-              }}
-            >
-              编辑
-            </Button>
-            <Button
-              type="link"
-              size="small"
-              icon={<UserOutlined />}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleManageOwners(category);
-              }}
-            >
-              责任人
-            </Button>
-            <Button
-              type="link"
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteClick(category);
-              }}
-            >
-              删除
-            </Button>
-          </Space>
-        </div>
-      ),
-      icon: category.children && category.children.length > 0 ? <FolderOutlined /> : <FileOutlined />,
-      children: category.children ? convertToTreeData(category.children) : undefined,
-    }));
-  };
-
   const filterTree = (data, search) => {
     if (!search) return data;
     if (!Array.isArray(data)) return [];
     return data
       .map((item) => {
-        if (item.nameCn.includes(search) || item.nameEn.includes(search)) {
+        if (item.nameCn.includes(search) || item.nameEn.includes(search) || item.categoryAlias?.includes(search)) {
           return item;
         }
         if (item.children && item.children.length > 0) {
@@ -268,21 +190,14 @@ function CategoryList() {
             />
           </div>
 
-          <Spin spinning={loading}>
-            {filteredTree.length > 0 ? (
-              <Tree
-                showLine
-                showIcon
-                expandedKeys={expandedKeys}
-                onExpand={(keys) => setExpandedKeys(keys)}
-                selectedKeys={[]}
-                treeData={convertToTreeData(filteredTree)}
-                className="category-tree"
-              />
-            ) : (
-              <Empty description="暂无分类数据" />
-            )}
-          </Spin>
+          <ModernCategoryTree
+            data={filteredTree}
+            loading={loading}
+            onAddChild={handleAddChild}
+            onEdit={handleEdit}
+            onManageOwners={handleManageOwners}
+            onDelete={handleDeleteClick}
+          />
 
           <CategoryFormModal
             visible={formModalVisible}

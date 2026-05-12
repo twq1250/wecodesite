@@ -1,0 +1,60 @@
+// 通用订阅配置抽屉样式
+
+.subscription-config-drawer {
+  .item-info {
+    padding: 16px;
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    margin-bottom: 24px;
+
+    .info-item {
+      display: flex;
+      margin-bottom: 8px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .label {
+        width: 80px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        flex-shrink: 0;
+      }
+
+      .value {
+        font-size: 13px;
+        color: var(--text-primary);
+        word-break: break-all;
+      }
+    }
+  }
+
+  .subscription-form {
+    :deep(.ant-form-item-label > label) {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    :deep(.ant-radio-group) {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+  }
+
+  :deep(.ant-drawer-footer) {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .drawer-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+
+    .ant-btn {
+      border-radius: 6px;
+    }
+  }
+}

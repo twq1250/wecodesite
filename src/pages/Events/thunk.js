@@ -30,15 +30,6 @@ export const fetchEvents = async ({ keyword, needReview, categoryId, curPage, pa
   }
 };
 
-export const fetchAllEvents = async (params = {}) => {
-  try {
-    const result = await fetchApi(API_CONFIG.EVENTS.LIST, { params });
-    return result || {};
-  } catch (err) {
-    return {};
-  }
-};
-
 export const fetchAppEvents = async (appId, params = {}) => {
   try {
     const result = await fetchApi(buildApiUrl(API_CONFIG.APP_EVENTS.LIST, { appId }), { params });
@@ -64,15 +55,6 @@ export const subscribeEvents = async (appId, params) => {
 export const configEventSubscription = async (appId, eventId, params) => {
   try {
     const result = await fetchApi(buildApiUrl(API_CONFIG.APP_EVENTS.CONFIG, { appId, id: eventId }), { method: 'PUT', body: JSON.stringify(params) });
-    return result || {};
-  } catch (err) {
-    return {};
-  }
-};
-
-export const remindApproval = async (id) => {
-  try {
-    const result = await fetchApi(`/events/${id}/remind`, { method: 'POST' });
     return result || {};
   } catch (err) {
     return {};

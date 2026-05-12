@@ -1,6 +1,12 @@
 import React from 'react';
 import { adminTableBaseColumn } from '../../../utils/commonTableConfigs';
 
+export const pageInfo = {
+  title: '事件管理',
+  description: '管理事件定义，配置事件订阅',
+  addButtonText: '注册事件',
+};
+
 export const getEventListColumns = ({ handleView, handleEdit, handleDelete }) => {
   const baseColumn = adminTableBaseColumn({ handleView, handleEdit, handleDelete });
   return [

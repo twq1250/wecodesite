@@ -1,130 +1,255 @@
 import React, { useEffect, useState } from 'react';
-import { Button } from 'antd';
-import { useSubscriptionList } from '../../hooks/useSubscriptionList';
-import SubscriptionTable from '../../components/SubscriptionTable/SubscriptionTable';
+import { message } from 'antd';
+import { queryParams, getPageClassPrefix } from '../../utils/common';
+import { INIT_PAGECONFIG } from '../../utils/constants';
+import PageHeader from '../../components/PageHeader/PageHeader';
+import PageList from '../../components/PageList/PageList';
+import ResourceDrawer from '../../components/ResourceManagement/ResourceDrawer';
 import ApprovalAddressModal from '../../components/ApprovalAddressModal/ApprovalAddressModal';
-import DeleteConfirmModal from '../../components/DeleteConfirmModal/DeleteConfirmModal';
-import CallbackDrawer from './CallbackDrawer';
-import CallbackConfigDrawer from './CallbackConfigDrawer';
-import { fetchAppCallbacks, deleteAppCallbackSubscription, withdrawApproval, subscribeCallbacks } from './thunk';
-import { getCallbackColumns } from './constants';
-import { queryParams, openUrl } from '../../utils/common';
+import ActionConfirmModal from '../../components/DeleteConfirmModal/DeleteConfirmModal';
+import SubscriptionConfigDrawer from '../../components/ResourceManagement/SubscriptionConfigDrawer';
+import { withdrawApproval, deleteAppCallbackSubscription, subscribeCallbacks, fetchAppCallbacks, fetchCallbackCategories, fetchCallbacks, configCallbackSubscription } from './thunk';
+import { createCallbackDrawerColumns, createCallbackColumns } from '../../utils/commonTableConfigs';
+import { pageInfo } from './constants';
 import './Callbacks.m.less';
 
 function Callbacks() {
   const appId = queryParams('appId');
-  const [configDrawerOpen, setConfigDrawerOpen] = useState(false);
+  
+  const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const [currentWithdrawRecord, setCurrentWithdrawRecord] = useState(null);
+  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [currentDeleteId, setCurrentDeleteId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [approvalModalOpen, setApprovalModalOpen] = useState(false);
+  const [currentApprovalInfo, setCurrentApprovalInfo] = useState({});
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [callbackList, setCallbackList] = useState([]);
+  const [pagination, setPagination] = useState(INIT_PAGECONFIG);
+  const [loading, setLoading] = useState(false);
   const [editingCallback, setEditingCallback] = useState(null);
+  const [configDrawerOpen, setConfigDrawerOpen] = useState(false);
 
-  const {
-    data: callbacks,
-    loading,
-    pagination,
-    drawerOpen,
-    deleteLoading,
-    deleteModalOpen,
-    subscribeLoading,
-    approvalModalOpen,
-    currentApprovalInfo,
-    loadData,
-    handlePageChange,
-    openDrawer,
-    closeDrawer,
-    handleSubscribe,
-    handleCopyApprovalAddress,
-    handleWithdraw,
-    handleDeleteClick,
-    handleConfirmDelete,
-    closeApprovalModal,
-    closeDeleteModal,
-  } = useSubscriptionList(appId, {
-    fetchList: fetchAppCallbacks,
-    subscribe: subscribeCallbacks,
-    deleteItem: deleteAppCallbackSubscription,
-    withdraw: withdrawApproval,
-  });
+  const loadCallbackList = async (pageNum = 1, pageSize = pagination.pageSize) => {
+    if (!appId) return;
+    setLoading(true);
+    
+    const response = await fetchAppCallbacks(appId, { curPage: pageNum, pageSize: pageSize });
+    
+    if (response && response.code === '200') {
+      setCallbackList(response.data || []);
+      setPagination(prev => ({
+        ...prev,
+        total: response.page?.total || 0,
+        pageSize: pageSize,
+        curPage: pageNum
+      }));
+    } else {
+      message.error(response?.message || '加载列表失败');
+    }
+    
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (appId) {
-      loadData();
+      loadCallbackList();
     }
-  }, [appId, loadData]);
+  }, [appId]);
+
+  const handlePageChange = (page, size) => {
+    loadCallbackList(page, size);
+  };
+
+  const openDrawer = () => setDrawerOpen(true);
+  const closeDrawer = () => setDrawerOpen(false);
+
+  const handleSubscribe = async (selectedItems) => {
+    if (!appId) return;
+    const permissionIds = selectedItems.filter(item => item.id).map(item => item.id);
+    if (permissionIds.length === 0) {
+      message.warning('没有可订阅的权限');
+      return;
+    }
+    setSubscribeLoading(true);
+    
+    const response = await subscribeCallbacks(appId, { permissionIds });
+    
+    if (response && response.code === '200') {
+      message.success('申请已提交');
+      setDrawerOpen(false);
+      loadCallbackList(1, INIT_PAGECONFIG.pageSize);
+    } else {
+      message.error(response?.message || '申请失败');
+    }
+    
+    setSubscribeLoading(false);
+  };
+
+  const handleCopyApprovalAddress = (record) => {
+    setCurrentApprovalInfo({
+      id: record.id,
+      approver: record.approver?.userName || '待分配',
+      approvalUrl: record.approvalUrl || ''
+    });
+    setApprovalModalOpen(true);
+  };
+
+  const closeApprovalModal = () => setApprovalModalOpen(false);
+
+  const handleDeleteClick = (id) => {
+    setDeleteModalOpen(true);
+    setCurrentDeleteId(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!currentDeleteId) return;
+    setDeleteLoading(true);
+    
+    const response = await deleteAppCallbackSubscription(appId, currentDeleteId);
+    
+    if (response && response.code === '200') {
+      message.success('删除成功');
+      setDeleteModalOpen(false);
+      loadCallbackList(pagination.curPage);
+    } else {
+      message.error(response?.message || '删除失败');
+    }
+    
+    setDeleteLoading(false);
+  };
+
+  const closeDeleteModal = () => setDeleteModalOpen(false);
+
+  const handleWithdraw = (record) => {
+    setWithdrawModalOpen(true);
+    setCurrentWithdrawRecord(record);
+  };
+
+  const handleConfirmWithdraw = async () => {
+    if (!currentWithdrawRecord) return;
+    setWithdrawLoading(true);
+    
+    const response = await withdrawApproval(appId, currentWithdrawRecord.id);
+    
+    if (response && response.code === '200') {
+      message.success('已撤回');
+      setWithdrawModalOpen(false);
+      setCurrentWithdrawRecord(null);
+      loadCallbackList(pagination.curPage);
+    } else {
+      message.error(response?.message || '撤回失败');
+    }
+    
+    setWithdrawLoading(false);
+  };
+
+  const closeWithdrawModal = () => {
+    setWithdrawModalOpen(false);
+    setCurrentWithdrawRecord(null);
+  };
 
   const handleEdit = (record) => {
-    setEditingCallback(record);
     setConfigDrawerOpen(true);
+    setEditingCallback(record);
   };
 
-  const handleSaveCallback = async () => {
-    loadData();
+  const handleConfigSave = () => {
+    loadCallbackList(pagination.curPage);
   };
 
-  const handleCloseConfigDrawer = () => {
-    setConfigDrawerOpen(false);
-    setEditingCallback(null);
-  };
-
-  const handleOpenDoc = (url) => {
-    openUrl(url);
-  };
-
-  const columns = getCallbackColumns({
-    handleOpenDoc,
-    handleEdit,
+  const actionCallbacks = {
     handleCopyApprovalAddress,
-    handleWithdraw,
     handleDeleteClick,
+    handleWithdraw,
+    handleEdit,
+  };
+
+  const columns = createCallbackColumns().map(col => {
+    if (col.key === 'action' && col.render) {
+      const originalRender = col.render;
+      return {
+        ...col,
+        render: (text, record) => originalRender(text, record, actionCallbacks)
+      };
+    }
+    return col;
   });
 
   return (
-    <div className="callbacks">
-      <div className="page-header">
-        <div className="page-header-left">
-          <h4 className="page-title">回调配置</h4>
-          <span className="page-desc">
-            配置API回调地址
-            <a onClick={() => navigate('/callbacks-docs')} style={{ marginLeft: 4, cursor: 'pointer', color: '#1677ff' }}>了解更多</a>
-          </span>
-        </div>
-        <Button type="primary" onClick={openDrawer} style={{ justifyContent: 'center', borderRadius: 6 }}>添加回调</Button>
-      </div>
+    <div className={getPageClassPrefix('callback')}>
+      <PageHeader
+        onButtonClick={openDrawer}
+        buttonText={pageInfo.addButtonText}
+        linkText={pageInfo.linkText}
+        linkUrl={pageInfo.linkUrl}
+        title={pageInfo.title}
+        description={pageInfo.description}
+      />
 
-      <SubscriptionTable
-        columns={columns}
-        dataSource={callbacks}
+      <PageList
         loading={loading}
-        pagination={pagination}
+        columns={columns}
+        dataSource={callbackList}
         onPageChange={handlePageChange}
-      />
-
-      <CallbackDrawer
-        open={drawerOpen}
-        onClose={closeDrawer}
-        onConfirm={handleSubscribe}
-        selectedCallbacks={callbacks}
-        subscribeLoading={subscribeLoading}
-      />
-
-      <CallbackConfigDrawer
-        open={configDrawerOpen}
-        onClose={handleCloseConfigDrawer}
-        onSave={handleSaveCallback}
-        callback={editingCallback}
+        pagination={{
+          pageSize: pagination.pageSize,
+          total: pagination.total,
+          curPage: pagination.curPage,
+        }}
       />
 
       <ApprovalAddressModal
+        approvalUrl={currentApprovalInfo.approvalUrl}
+        approver={currentApprovalInfo.approver}
         open={approvalModalOpen}
         onClose={closeApprovalModal}
-        approver={currentApprovalInfo.approver}
-        approvalUrl={currentApprovalInfo.approvalUrl}
-        appId={appId}
       />
 
-      <DeleteConfirmModal
-        open={deleteModalOpen}
-        onClose={closeDeleteModal}
-        onConfirm={handleConfirmDelete}
+      <ActionConfirmModal
         loading={deleteLoading}
+        onConfirm={handleConfirmDelete}
+        onClose={closeDeleteModal}
+        type="delete"
+        open={deleteModalOpen}
+      />
+
+      <ActionConfirmModal
+        loading={withdrawLoading}
+        onConfirm={handleConfirmWithdraw}
+        onClose={closeWithdrawModal}
+        type="withdraw"
+        open={withdrawModalOpen}
+      />
+
+      <SubscriptionConfigDrawer
+        onSave={handleConfigSave}
+        onClose={() => {
+          setEditingCallback(null);
+          setConfigDrawerOpen(false);
+        }}
+        item={editingCallback}
+        itemType="callback"
+        configThunk={configCallbackSubscription}
+        open={configDrawerOpen}
+      />
+
+      <ResourceDrawer
+        selectedItems={callbackList}
+        subscribeLoading={subscribeLoading}
+        onConfirm={handleSubscribe}
+        onClose={closeDrawer}
+        appId={appId}
+        fetchCategories={fetchCallbackCategories}
+        fetchData={fetchCallbacks}
+        getColumns={createCallbackDrawerColumns}
+        showAdvancedFeatures={false}
+        title="添加回调"
+        className="callback-drawer"
+        open={drawerOpen}
+        placeholder="回调名称/Scope"
       />
     </div>
   );

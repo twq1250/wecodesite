@@ -38,3 +38,80 @@ export const convertToTreeData = (categoryList) => {
     children: convertToTreeData(cat.children)
   }));
 };
+
+// ==================== 通用组件工具函数 ====================
+
+// 根据页面类型获取类名前缀
+export const getPageClassPrefix = (pageType) => {
+  const prefixMap = {
+    'api': 'api-management',
+    'callback': 'callbacks',
+    'event': 'events'
+  };
+  return prefixMap[pageType] || 'resource';
+};
+
+// 根据页面类型获取标题
+export const getPageTitle = (pageType) => {
+  const titleMap = {
+    'api': 'API管理',
+    'callback': '回调配置',
+    'event': '事件配置'
+  };
+  return titleMap[pageType] || '';
+};
+
+// 分类数据转换为模块列表格式
+export const transformCategoriesToModules = (categories) => {
+  if (!Array.isArray(categories) || categories.length === 0) return [];
+
+  const result = [];
+  const firstCategoryId = categories[0]?.id;
+  if (firstCategoryId) {
+    result.push({
+      key: 'all',
+      value: firstCategoryId,
+      name: '全部分类'
+    });
+  }
+
+  categories.forEach(cat => {
+    if (cat.children && Array.isArray(cat.children)) {
+      cat.children.forEach(child => {
+        if (child.id) {
+          result.push({
+            key: child.id,
+            value: child.id,
+            name: child.nameCn || child.name
+          });
+        }
+      });
+    }
+  });
+
+  return result;
+};
+
+// 解析Tab配置
+export const parseTabConfig = (rawData, targetAppType, searchKey) => {
+  try {
+    if (!rawData?.data?.lookups?.[searchKey]?.items) {
+      return { firstLevelTabs: [], secondLevelTabs: [] };
+    }
+    
+    const items = rawData.data.lookups[searchKey].items;
+    const targetItem = items.find(item => item.itemCode === targetAppType);
+    
+    if (!targetItem?.itemValue) {
+      return { firstLevelTabs: [], secondLevelTabs: [] };
+    }
+    
+    const parsedTabs = JSON.parse(targetItem.itemValue);
+    return {
+      firstLevelTabs: parsedTabs,
+      secondLevelTabs: parsedTabs[0]?.children || []
+    };
+  } catch (error) {
+    return { firstLevelTabs: [], secondLevelTabs: [] };
+  }
+};

@@ -96,7 +96,10 @@ export const fetchApi = async (url, options = {}) => {
   const { params, ...fetchOptions } = options;
   let fullUrl = `${API_CONFIG.BASE_URL}${url}`;
   if (params) {
-    const queryString = new URLSearchParams(params).toString();
+    const filteredParams = Object.fromEntries(
+      Object.entries(params).filter(([_, value]) => value !== undefined && value !== null && value !== '')
+    );
+    const queryString = new URLSearchParams(filteredParams).toString();
     fullUrl = queryString ? `${fullUrl}?${queryString}` : fullUrl;
   }
   const response = await fetch(fullUrl, {

@@ -1,0 +1,244 @@
+.modern-category-tree {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  .tree-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 8px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fafafa;
+    flex-shrink: 0;
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .toolbar-btn {
+        color: #595959;
+        font-size: 13px;
+        padding: 4px 12px;
+        height: auto;
+        transition: all 0.2s;
+
+        &:hover {
+          color: #1890ff;
+          background: rgba(24, 144, 255, 0.08);
+        }
+      }
+
+      .toolbar-divider {
+        color: #d9d9d9;
+        font-size: 12px;
+      }
+    }
+  }
+
+  .tree-container {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f0f0f0;
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+
+      &:hover {
+        background: #a8a8a8;
+      }
+    }
+  }
+
+  .tree-node-wrapper {
+    margin-bottom: 8px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .tree-node {
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    background: #fff;
+
+    &:hover {
+      background: #f5f7fa;
+      border-color: #1890ff;
+
+      .node-actions {
+        opacity: 1;
+      }
+    }
+
+    &.has-children {
+      .node-content {
+        font-weight: 500;
+      }
+    }
+
+    &.level-root {
+      &.expanded {
+        background: #f8f9fb;
+        border-color: #e8e8e8;
+      }
+    }
+  }
+
+  .node-content {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    gap: 8px;
+    min-height: 44px;
+  }
+
+  .expand-btn {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #8c8c8c;
+    border-radius: 4px;
+    transition: all 0.2s;
+
+    &:hover {
+      background: #1890ff;
+      color: #fff;
+    }
+
+    svg {
+      font-size: 10px;
+    }
+  }
+
+  .expand-placeholder {
+    width: 20px;
+    height: 20px;
+  }
+
+  .node-icon {
+    font-size: 16px;
+    color: #faad14;
+    display: flex;
+    align-items: center;
+  }
+
+  .node-title {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+
+    .alias-tag {
+      flex-shrink: 0;
+      margin: 0;
+    }
+
+    .name-cn {
+      font-size: 14px;
+      color: #262626;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .name-en {
+      font-size: 13px;
+      color: #8c8c8c;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .node-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 12px;
+
+    .child-count {
+      font-size: 12px;
+      color: #8c8c8c;
+      background: #f0f0f0;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+  }
+
+  .node-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    .action-btn {
+      color: #8c8c8c;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        color: #1890ff;
+        background: rgba(24, 144, 255, 0.08);
+      }
+    }
+  }
+
+  .children-container {
+    overflow: hidden;
+    animation: slideDown 0.25s ease-out;
+    padding-left: 12px;
+    margin-top: 6px;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .node-actions {
+      opacity: 1;
+    }
+
+    .node-info {
+      display: none;
+    }
+
+    .node-content {
+      padding: 8px;
+    }
+
+    .name-en {
+      display: none;
+    }
+  }
+}

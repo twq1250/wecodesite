@@ -59,3 +59,22 @@ export const ADMIN_MENU_CONFIG = [
   { title: '回调列表', router: '/admin/callbacks' },
   { title: '审批中心', router: '/admin/approvals' }
 ];
+
+// ==================== 通用组件常量 ====================
+
+// 页面类型枚举
+export const PAGE_TYPE = {
+  API: 'api',
+  CALLBACK: 'callback',
+  EVENT: 'event',
+};
+
+// 页面标题映射
+export const PAGE_TITLE_MAP = {
+  [PAGE_TYPE.API]: 'API管理',
+  [PAGE_TYPE.CALLBACK]: '回调配置',
+  [PAGE_TYPE.EVENT]: '事件配置',
+};
+
+// 抽屉宽度（统一）
+export const DRAWER_WIDTH = 900;

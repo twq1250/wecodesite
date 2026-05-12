@@ -1,6 +1,12 @@
 import React from 'react';
 import { adminTableBaseColumn } from '../../../utils/commonTableConfigs';
 
+export const pageInfo = {
+  title: '回调管理',
+  description: '管理回调接口，配置回调地址',
+  addButtonText: '注册回调',
+};
+
 export const getCallbackListColumns = ({ handleView, handleEdit, handleDelete }) => {
   const baseColumn = adminTableBaseColumn({ handleView, handleEdit, handleDelete });
   return [

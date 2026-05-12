@@ -1,18 +1,8 @@
-.category-list {
-  background-color: #fff;
-  padding: 24px;
-  min-height: 100%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-}
-
 .page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  flex-shrink: 0;
+  margin-bottom: 24px;
 
   &-left {
     display: flex;
@@ -25,20 +15,20 @@
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
+  margin: 0;
 }
 
 .page-desc {
   font-size: 13px;
   color: var(--text-tertiary);
-}
-
-.toolbar {
-  margin-bottom: 16px;
-  display: flex;
-  gap: 12px;
-  flex-shrink: 0;
-}
-
-.owner-section {
-  margin-top: 16px;
+  
+  a {
+    margin-left: 4px;
+    cursor: pointer;
+    color: var(--primary-color);
+    
+    &:hover {
+      opacity: 0.8;
+    }
+  }
 }

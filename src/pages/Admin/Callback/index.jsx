@@ -1,84 +1,156 @@
-import React, { useEffect } from 'react';
-import { Button, Table, Spin, Empty, Pagination } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import { fetchCallbackList, deleteCallback } from './thunk';
-import CallbackRegister from './CallbackRegister';
-import { getCallbackListColumns } from './constants';
-import { useAdminList } from '../../../hooks/useAdminList';
-import AdminTableToolbar from '../../../components/AdminTableToolbar/AdminTableToolbar';
+import React, { useState, useEffect } from 'react';
+import { message, Button } from 'antd';
 import { fetchCategoryTree } from '../Category/thunk';
-import { PAGE_SIZE_OPTIONS } from '../../../utils/constants';
-import { isInAdminWhitelist } from '../../../utils/common';
+import { fetchCallbackList, createCallback, updateCallback, fetchCallbackDetail, deleteCallback } from './thunk';
+import AdminTableToolbar from '../../../components/AdminTableToolbar/AdminTableToolbar';
+import PageList from '../../../components/PageList/PageList';
+import ResourceRegister from '../../../components/ResourceRegister';
 import SimpleSidebar from '../../../components/SimpleSidebar/SimpleSidebar';
+import { getCallbackListColumns } from './constants';
+import { PROPERTY_PRESETS, INIT_PAGECONFIG } from '../../../utils/constants';
 import './CallbackList.m.less';
+import { pageInfo } from './constants';
 
 function CallbackList() {
-  const navigate = useNavigate();
+  const [mode, setMode] = useState('create');
+  const [currentItem, setCurrentItem] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [status, setStatus] = useState(undefined);
+  const [categoryId, setCategoryId] = useState(undefined);
+  const [keyword, setKeyword] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [pagination, setPagination] = useState(INIT_PAGECONFIG);
+  const [loading, setLoading] = useState(false);
+  const [records, setRecords] = useState([]);
 
-  const init = async () => {
-    const canShow = await isAdminWhitelist();
-    if (!canShow) {
-      navigate('/apps');
-    }
-  };
-
-  useEffect(() => {
-    init();
-  }, []);
-
-  const {
-    data: callbackList,
-    loading,
-    handleAdd,
-    handleView,
-    handleEdit,
-    handleDelete,
-    handleSuccess,
-    setKeyword,
-    handleSearch,
-    loadData,
-    loadCategories,
-    pagination,
-    handlePageChange,
-    modalVisible,
-    currentItem,
-    mode,
-    closeModal,
-    keyword,
-    categoryId,
-    categories,
-    status,
-    handleCategoryChange,
-    handleStatusChange,
-  } = useAdminList({
-    deleteItem: deleteCallback,
-    fetchList: fetchCallbackList,
-    fetchCategories: fetchCategoryTree,
-  });
+  const callbackRecords = records;
 
   useEffect(() => {
     loadCategories();
-    loadData();
-  }, [loadCategories, loadData]);
+    loadRecords();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      const res = await fetchCategoryTree();
+      if (res && res.code === '200') {
+        setCategories(res.data || []);
+      } else {
+        message.error(res?.message || '加载分类失败');
+      }
+    } catch (err) {
+      message.error('加载分类异常');
+    }
+  };
+
+  const loadRecords = async (query = {}) => {
+    setLoading(true);
+    const queryParams = {
+      keyword: query.keyword ?? keyword,
+      categoryId: query.categoryId ?? categoryId,
+      status: query.status ?? status,
+      curPage: query.curPage ?? pagination.curPage,
+      pageSize: query.pageSize ?? pagination.pageSize,
+    };
+
+    try {
+      const res = await fetchCallbackList(queryParams);
+      if (res && res.code === '200') {
+        setRecords(res.data || []);
+        setPagination(prev => ({
+          ...prev,
+          total: res.page?.total || 0,
+          curPage: queryParams.curPage,
+          pageSize: queryParams.pageSize
+        }));
+      } else {
+        message.error(res?.message || '加载列表失败');
+      }
+    } catch (err) {
+      message.error('加载列表异常');
+    }
+
+    setLoading(false);
+  };
+
+  const handleStatusChange = (val) => {
+    setStatus(val);
+    loadRecords({ status: val });
+  };
+
+  const handleCategoryChange = (val) => {
+    setCategoryId(val);
+    loadRecords({ categoryId: val });
+  };
+
+  const handlePageChange = (page, size) => {
+    loadRecords({ curPage: page, pageSize: size });
+  };
+
+  const handleSearch = () => {
+    loadRecords({ curPage: 1 });
+  };
+
+  const handleView = (record) => {
+    setCurrentItem({ id: record.id });
+    setMode('view');
+    setModalVisible(true);
+  };
+
+  const handleAdd = () => {
+    setMode('create');
+    setCurrentItem(null);
+    setModalVisible(true);
+  };
+
+  const handleEdit = (record) => {
+    setMode('edit');
+    setCurrentItem({ id: record.id });
+    setModalVisible(true);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      const res = await deleteCallback(id);
+      if (res && res.code === '200') {
+        message.success('删除成功');
+        loadRecords();
+      } else {
+        message.error(res?.message || '删除失败');
+      }
+    } catch (err) {
+      message.error('删除异常');
+    }
+  };
+
+  const closeModal = () => {
+    setCurrentItem(null);
+    setModalVisible(false);
+  };
+
+  const handleSuccess = () => {
+    loadRecords();
+    setModalVisible(false);
+  };
 
   const columns = getCallbackListColumns({
-    handleView,
-    handleEdit,
     handleDelete,
+    handleEdit,
+    handleView,
   });
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <SimpleSidebar />
       <div style={{ flex: 1, overflow: 'auto' }}>
-        <div className="callback-list">
+        <div className="callback-management-page">
           <div className="page-header">
             <div className="page-header-left">
-              <h4 className="page-title">回调管理</h4>
-              <span className="page-desc">管理回调接口，配置回调地址</span>
+              <h4 className="page-title">{pageInfo.title}</h4>
+              <span className="page-desc">{pageInfo.description}</span>
             </div>
             <Button type="primary" onClick={handleAdd} style={{ justifyContent: 'center', borderRadius: 6 }}>
-              注册回调
+              {pageInfo.addButtonText}
             </Button>
           </div>
 
@@ -87,48 +159,38 @@ function CallbackList() {
             onKeywordChange={setKeyword}
             onSearch={handleSearch}
             placeholder="搜索回调名称"
-            categoryId={categoryId}
-            categories={categories}
-            onCategoryChange={handleCategoryChange}
             status={status}
             onStatusChange={handleStatusChange}
+            categories={categories}
+            categoryId={categoryId}
+            onCategoryChange={handleCategoryChange}
           />
 
-          <Spin spinning={loading}>
-            {callbackList.length > 0 ? (
-              <>
-                <div className="table-wrapper">
-                  <Table
-                    columns={columns}
-                    dataSource={callbackList}
-                    rowKey="id"
-                    pagination={false}
-                  />
-                </div>
-                <div style={{ marginTop: 16, textAlign: 'right' }}>
-                  <Pagination
-                    total={pagination.total}
-                    current={pagination.curPage}
-                    pageSize={pagination.pageSize}
-                    pageSizeOptions={PAGE_SIZE_OPTIONS}
-                    showSizeChanger
-                    showQuickJumper
-                    showTotal={(total) => `共 ${total} 条`}
-                    onChange={handlePageChange}
-                  />
-                </div>
-              </>
-            ) : (
-              <Empty description="暂无回调数据" />
-            )}
-          </Spin>
+          <PageList
+            columns={columns}
+            dataSource={callbackRecords}
+            loading={loading}
+            pagination={{
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+              curPage: pagination.curPage,
+            }}
+            onPageChange={handlePageChange}
+          />
 
-          <CallbackRegister
-            visible={modalVisible}
-            callback={currentItem}
+          <ResourceRegister
+            thunk={{
+              update: updateCallback,
+              create: createCallback,
+              fetchDetail: fetchCallbackDetail,
+            }}
             mode={mode}
             onSuccess={handleSuccess}
+            propertyPresets={PROPERTY_PRESETS}
             onCancel={closeModal}
+            resourceType="callback"
+            resource={currentItem}
+            visible={modalVisible}
           />
         </div>
       </div>

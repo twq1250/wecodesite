@@ -1,4 +1,7 @@
-.api-permission-drawer {
+// 通用抽屉样式
+// 支持简单模式和高级模式（showAdvancedFeatures）
+
+.resource-drawer {
   &.ant-drawer {
     .ant-drawer-body {
       overflow: hidden;
@@ -102,6 +105,37 @@
   display: flex;
   flex-direction: column;
   padding-left: 16px;
+
+  :deep(.ant-table) {
+    background: transparent;
+    
+    .ant-table-thead > tr > th,
+    .ant-table-tbody > tr > td {
+      white-space: nowrap;
+    }
+  }
+
+  :deep(.ant-table-thead > tr > th) {
+    background: var(--bg-secondary);
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  :deep(.ant-table-tbody > tr:hover > td) {
+    background: var(--bg-hover);
+  }
+
+  :deep(.ant-checkbox-wrapper) {
+    margin-right: 8px;
+  }
+}
+
+// 简单模式：表格占满宽度
+.drawer-table-full {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
 
   :deep(.ant-table) {
     background: transparent;

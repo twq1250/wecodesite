@@ -3,6 +3,12 @@ import { Tag } from 'antd';
 import { AUTH_TYPE } from '../../../utils/constants';
 import { adminTableBaseColumn } from '../../../utils/commonTableConfigs';
 
+export const pageInfo = {
+  title: 'API管理',
+  description: '管理API接口，配置API权限',
+  addButtonText: '注册API',
+};
+
 export const HTTP_METHOD_OPTIONS = [
   { value: 'GET', label: 'GET' },
   { value: 'POST', label: 'POST' },

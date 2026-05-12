@@ -2,16 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Input } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 
-function DeleteConfirmModal({ 
+const ACTION_CONFIG = {
+  delete: {
+    defaultTitle: '确认删除',
+    defaultContent: '确定要删除吗？',
+    confirmButtonText: '确认删除',
+    loadingText: '删除中...',
+    dangerColor: '#ff4d4f'
+  },
+  withdraw: {
+    defaultTitle: '确认撤回',
+    defaultContent: '确定要撤回吗？撤回后将无法恢复。',
+    confirmButtonText: '确认撤回',
+    loadingText: '撤回中...',
+    dangerColor: '#faad14'
+  }
+};
+
+function ActionConfirmModal({ 
   open, 
   onClose, 
   onConfirm, 
-  title = '确认删除', 
-  content = '确定要删除吗？', 
+  type = 'delete',
+  title, 
+  content, 
   loading,
   requireConfirmText = null 
 }) {
   const [confirmText, setConfirmText] = useState('');
+  
+  const config = ACTION_CONFIG[type] || ACTION_CONFIG.delete;
+  const modalTitle = title || config.defaultTitle;
+  const modalContent = content || config.defaultContent;
   
   useEffect(() => {
     if (!open) {
@@ -21,14 +43,14 @@ function DeleteConfirmModal({
 
   const isConfirmDisabled = () => {
     if (requireConfirmText) {
-      return loading || confirmText !== requireConfirmText
+      return loading || confirmText !== requireConfirmText;
     } else {
-      loading;
+      return loading;
     }
-  }
+  };
 
   const handleConfirm = () => {
-    if (!isConfirmDisabled) {
+    if (!isConfirmDisabled()) {
       onConfirm();
     }
   };
@@ -44,14 +66,14 @@ function DeleteConfirmModal({
     >
       <div style={{ textAlign: 'center', padding: '20px 0' }}>
         <ExclamationCircleOutlined style={{ fontSize: 48, color: '#faad14', marginBottom: 16 }} />
-        <div style={{ fontSize: 16, marginBottom: 8 }}>{title}</div>
-        <div style={{ color: '#8c8c8c' }}>{content}</div>
+        <div style={{ fontSize: 16, marginBottom: 8 }}>{modalTitle}</div>
+        <div style={{ color: '#8c8c8c' }}>{modalContent}</div>
       </div>
 
       {requireConfirmText && (
         <div style={{ marginBottom: 16, padding: '0 20px' }}>
           <div style={{ marginBottom: 8, color: '#333' }}>
-            请输入 <strong style={{ color: '#1677ff' }}>{requireConfirmText}</strong> 以确认删除：
+            请输入 <strong style={{ color: '#1677ff' }}>{requireConfirmText}</strong> 以确认：
           </div>
           <Input
             placeholder={`请输入 ${requireConfirmText}`}
@@ -83,22 +105,22 @@ function DeleteConfirmModal({
         </button>
         <button 
           onClick={handleConfirm}
-          disabled={isConfirmDisabled}
+          disabled={isConfirmDisabled()}
           style={{ 
             padding: '6px 24px', 
-            background: '#ff4d4f', 
+            background: config.dangerColor, 
             color: '#fff',
             border: 'none',
             borderRadius: 4,
-            cursor: isConfirmDisabled ? 'not-allowed' : 'pointer',
-            opacity: isConfirmDisabled ? 0.7 : 1
+            cursor: isConfirmDisabled() ? 'not-allowed' : 'pointer',
+            opacity: isConfirmDisabled() ? 0.7 : 1
           }}
         >
-          {loading ? '删除中...' : '确认删除'}
+          {loading ? config.loadingText : config.confirmButtonText}
         </button>
       </div>
     </Modal>
   );
 }
 
-export default DeleteConfirmModal;
+export default ActionConfirmModal;

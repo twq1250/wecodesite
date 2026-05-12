@@ -30,15 +30,6 @@ export const fetchCallbacks = async ({ keyword, needReview, categoryId, curPage,
   }
 };
 
-export const fetchAllCallbacks = async (params = {}) => {
-  try {
-    const result = await fetchApi(API_CONFIG.CALLBACKS.LIST, { params });
-    return result || {};
-  } catch (err) {
-    return {};
-  }
-};
-
 export const fetchAppCallbacks = async (appId, params = {}) => {
   try {
     const result = await fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.LIST, { appId }), { params });
@@ -60,15 +51,6 @@ export const subscribeCallbacks = async (appId, params) => {
 export const configCallbackSubscription = async (appId, callbackId, params) => {
   try {
     const result = await fetchApi(buildApiUrl(API_CONFIG.APP_CALLBACKS.CONFIG, { appId, id: callbackId }), { method: 'PUT', body: JSON.stringify(params) });
-    return result || {};
-  } catch (err) {
-    return {};
-  }
-};
-
-export const remindApproval = async (id) => {
-  try {
-    const result = await fetchApi(`/callbacks/${id}/remind`, { method: 'POST' });
     return result || {};
   } catch (err) {
     return {};

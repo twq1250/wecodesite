@@ -164,7 +164,7 @@ function ApprovalCenter() {
   if (activeTab === 'mine') {
     cols = myColumns;
   } else if (activeTab === 'all') {
-    cols = allColumns;
+    cols = columns;
   }
 
   return (

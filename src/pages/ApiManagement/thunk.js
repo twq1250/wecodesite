@@ -89,20 +89,6 @@ export const withdrawApiApplication = async (appId, subscriptionId) => {
 };
 
 /**
- * 催办API审批
- * @param {string} id - 订阅记录ID
- * @returns {Promise<Object>} 催办结果
- */
-export const remindApproval = async (id) => {
-  try {
-    const result = await fetchApi(`/approval/remind`, { method: 'POST', body: JSON.stringify({ id }) });
-    return result || {};
-  } catch (err) {
-    return {};
-  }
-};
-
-/**
  * 删除已撤回的API订阅
  * @param {string} appId - 应用ID
  * @param {string} subscriptionId - 订阅记录ID

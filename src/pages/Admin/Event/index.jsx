@@ -1,134 +1,187 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button, Table, Spin, Empty, Pagination } from 'antd';
-import { fetchEventList, deleteEvent } from './thunk';
-import { getEventListColumns } from './constants';
-import EventRegister from './EventRegister';
-import { useAdminList } from '../../../hooks/useAdminList';
-import AdminTableToolbar from '../../../components/AdminTableToolbar/AdminTableToolbar';
+import { useState } from 'react';
+import { message, Button } from 'antd';
 import { fetchCategoryTree } from '../Category/thunk';
+import { updateEvent, createEvent, fetchEventDetail, fetchEventList, deleteEvent } from './thunk';
+import AdminTableToolbar from '../../../components/AdminTableToolbar/AdminTableToolbar';
+import PageList from '../../../components/PageList/PageList';
+import ResourceRegister from '../../../components/ResourceRegister';
 import SimpleSidebar from '../../../components/SimpleSidebar/SimpleSidebar';
-import { PAGE_SIZE_OPTIONS } from '../../../utils/constants';
-import { isInAdminWhitelist } from '../../../utils/common';
+import { PROPERTY_PRESETS, INIT_PAGECONFIG } from '../../../utils/constants';
+import { getEventListColumns } from './constants';
+import { pageInfo } from './constants';
 import './EventList.m.less';
 
 function EventList() {
-  const navigate = useNavigate();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null);
+  const [mode, setMode] = useState('create');
+  const [keyword, setKeyword] = useState('');
+  const [status, setStatus] = useState(undefined);
+  const [categoryId, setCategoryId] = useState(undefined);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [eventData, setEventData] = useState([]);
+  const [pagination, setPagination] = useState(INIT_PAGECONFIG);
 
-  useEffect(() => {
-    init();
-  }, []);
-  
-  const init = async () => {
-    const canShow = await isInAdminWhitelist();
-    if (!canShow) {
-      navigate('/apps');
+  const eventList = eventData;
+
+  const loadCategories = async () => {
+    const result = await fetchCategoryTree();
+    if (result && result.code === '200') {
+      setCategories(result.data || []);
+    } else {
+      message.error(result?.message || '加载分类失败');
     }
   };
 
-  const {
-    loadData,
-    loadCategories,
-    data: eventList,
-    categories,
-    categoryId,
-    status,
-    keyword,
-    loading,
-    pagination,
-    handleSearch,
-    handlePageChange,
-    handleCategoryChange,
-    handleStatusChange,
-    handleAdd,
-    handleEdit,
-    handleView,
-    handleDelete,
-    handleSuccess,
-    modalVisible,
-    currentItem,
-    mode,
-    closeModal,
-    setKeyword,
-  } = useAdminList({
-    fetchList: fetchEventList,
-    deleteItem: deleteEvent,
-    fetchCategories: fetchCategoryTree,
-  });
+  const loadEventData = async (searchParams = {}) => {
+    setLoading(true);
+    
+    const mergedParams = {
+      keyword: searchParams.keyword ?? keyword,
+      categoryId: searchParams.categoryId ?? categoryId,
+      status: searchParams.status ?? status,
+      curPage: searchParams.curPage ?? pagination.curPage,
+      pageSize: searchParams.pageSize ?? pagination.pageSize,
+    };
+
+    const result = await fetchEventList(mergedParams);
+
+    if (result && result.code === '200') {
+      setEventData(result.data || []);
+      setPagination(prev => ({
+        ...prev,
+        total: result.page?.total || 0,
+        curPage: mergedParams.curPage,
+        pageSize: mergedParams.pageSize
+      }));
+    } else {
+      message.error(result?.message || '加载列表失败');
+    }
+
+    setLoading(false);
+  };
 
   useEffect(() => {
     loadCategories();
-    loadData();
-  }, [loadCategories, loadData]);
+    loadEventData();
+  }, []);
+
+  const handleAdd = () => {
+    setModalVisible(true);
+    setCurrentItem(null);
+    setMode('create');
+  };
+
+  const handleView = (record) => {
+    setModalVisible(true);
+    setCurrentItem({ id: record.id });
+    setMode('view');
+  };
+
+  const handleEdit = (record) => {
+    setModalVisible(true);
+    setCurrentItem({ id: record.id });
+    setMode('edit');
+  };
+
+  const handleDelete = async (id) => {
+    const response = await deleteEvent(id);
+    if (response && response.code === '200') {
+      message.success('删除成功');
+      loadEventData();
+    } else {
+      message.error(response?.message || '删除失败');
+    }
+  };
+
+  const handleSearch = () => {
+    loadEventData({ curPage: 1 });
+  };
+
+  const handlePageChange = (page, size) => {
+    loadEventData({ curPage: page, pageSize: size });
+  };
+
+  const handleCategoryChange = (value) => {
+    setCategoryId(value);
+    loadEventData({ categoryId: value });
+  };
+
+  const handleStatusChange = (value) => {
+    setStatus(value);
+    loadEventData({ status: value });
+  };
+
+  const handleSuccess = () => {
+    setModalVisible(false);
+    loadEventData();
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setCurrentItem(null);
+  };
 
   const columns = getEventListColumns({
-    handleView,
-    handleEdit,
     handleDelete,
+    handleEdit,
+    handleView,
   });
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <SimpleSidebar />
       <div style={{ flex: 1, overflow: 'auto' }}>
-        <div className="event-list">
+        <div className="event-management-page">
           <div className="page-header">
             <div className="page-header-left">
-              <h4 className="page-title">事件管理</h4>
-              <span className="page-desc">管理事件定义，配置事件订阅</span>
+              <h4 className="page-title">{pageInfo.title}</h4>
+              <span className="page-desc">{pageInfo.description}</span>
             </div>
             <Button type="primary" onClick={handleAdd} style={{ justifyContent: 'center', borderRadius: 6 }}>
-              注册事件
+              {pageInfo.addButtonText}
             </Button>
           </div>
 
           <AdminTableToolbar
-            keyword={keyword}
-            onKeywordChange={setKeyword}
             onSearch={handleSearch}
-            placeholder="搜索事件名称"
+            onKeywordChange={setKeyword}
+            keyword={keyword}
+            onStatusChange={handleStatusChange}
+            status={status}
+            onCategoryChange={handleCategoryChange}
             categoryId={categoryId}
             categories={categories}
-            onCategoryChange={handleCategoryChange}
-            status={status}
-            onStatusChange={handleStatusChange}
+            placeholder="搜索事件名称"
           />
 
-          <Spin spinning={loading}>
-            {eventList.length > 0 ? (
-              <>
-                <div className="table-wrapper">
-                  <Table
-                    columns={columns}
-                    dataSource={eventList}
-                    rowKey="id"
-                    pagination={false}
-                  />
-                </div>
-                <div style={{ marginTop: 16, textAlign: 'right' }}>
-                  <Pagination
-                    total={pagination.total}
-                    current={pagination.curPage}
-                    pageSize={pagination.pageSize}
-                    pageSizeOptions={PAGE_SIZE_OPTIONS}
-                    showSizeChanger
-                    showQuickJumper
-                    showTotal={(total) => `共 ${total} 条`}
-                    onChange={handlePageChange}
-                  />
-                </div>
-              </>
-            ) : (
-              <Empty description="暂无事件数据" />
-            )}
-          </Spin>
+          <PageList
+            dataSource={eventList}
+            loading={loading}
+            columns={columns}
+            onPageChange={handlePageChange}
+            pagination={{
+              curPage: pagination.curPage,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+            }}
+          />
 
-          <EventRegister
+          <ResourceRegister
+            resource={currentItem}
+            resourceType="event"
             visible={modalVisible}
-            event={currentItem}
             mode={mode}
-            onSuccess={handleSuccess}
+            thunk={{
+              fetchDetail: fetchEventDetail,
+              create: createEvent,
+              update: updateEvent,
+            }}
+            propertyPresets={PROPERTY_PRESETS}
             onCancel={closeModal}
+            onSuccess={handleSuccess}
           />
         </div>
       </div>

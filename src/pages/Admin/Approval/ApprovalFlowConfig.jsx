@@ -23,7 +23,7 @@ import {
 import './ApprovalCenter.m.less';
 import { getApprovalFlowColumns } from './constants';
 import ApprovalFlowFormModal from '../../../components/ApprovalFlowFormModal/ApprovalFlowFormModal';
-import DeleteConfirmModal from '../../../components/DeleteConfirmModal/DeleteConfirmModal';
+import ActionConfirmModal from '../../../components/DeleteConfirmModal/DeleteConfirmModal';
 
 function ApprovalFlowConfig() {
   const [loading, setLoading] = useState(false);
@@ -199,7 +199,8 @@ function ApprovalFlowConfig() {
         onSubmit={handleFormSubmit}
       />
 
-      <DeleteConfirmModal
+      <ActionConfirmModal
+        type="delete"
         open={deleteModalVisible}
         onClose={() => setDeleteModalVisible(false)}
         onConfirm={handleConfirmDelete}

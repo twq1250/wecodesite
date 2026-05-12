@@ -1,74 +1,53 @@
-import React, { useState, useEffect } from 'react';
-import { Drawer, Tabs, Table, Button, Tag, Pagination, Input, Select, message } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Drawer, Tabs, Table, Button, Pagination, Input, Select, message } from 'antd';
 const { TabPane } = Tabs;
-import { fetchApis, fetchCategories, fetchTabConfig } from './thunk';
-import { mockAppInfo } from '../BasicInfo/mock';
-import { AUTH_TYPE, PAGE_SIZE_OPTIONS, INIT_PAGECONFIG } from '../../utils/constants';
+import { PAGE_SIZE_OPTIONS, INIT_PAGECONFIG, DRAWER_WIDTH } from '../../utils/constants';
 import { NEED_REVIEW_OPTIONS } from '../../utils/commonTableConfigs';
-import {
-  TAB_CONFIG_SEARCH_KEY,
-  getApiPermissionDrawerColumns,
-} from './constants';
-import './ApiPermissionDrawer.m.less';
+import { openUrl, transformCategoriesToModules, parseTabConfig } from '../../utils/common';
+import './ResourceDrawer.less';
 
 /**
- * 将分类数据转换为模块列表格式
- * 后端返回的分类数据结构转换为侧边栏模块列表所需的格式
- * @param {Array} categories - 分类数据数组
- * @returns {Array} 转换后的模块列表，包含'全部'选项
- */
-const transformCategoriesToModules = (categories) => {
-  if (!Array.isArray(categories) || categories.length === 0) return [];
-
-  const result = [];
-  const firstCategoryId = categories[0]?.id;
-  if (firstCategoryId) {
-    result.push({
-      key: 'all',
-      value: firstCategoryId,
-      name: '全部分类'
-    });
-  }
-
-  categories.forEach(cat => {
-    if (cat.children && Array.isArray(cat.children)) {
-      cat.children.forEach(child => {
-        if (child.id) {
-          result.push({
-            key: child.id,
-            value: child.id,
-            name: child.nameCn || child.name
-          });
-        }
-      });
-    }
-  });
-
-  return result;
-};
-
-/**
- * API权限开通抽屉组件
- * 用于从可用的API列表中选择需要开通的权限
+ * 通用资源抽屉组件
+ * 
+ * 功能：
+ * - 支持简单模式和高级模式（showAdvancedFeatures）
+ * - 高级模式：两层Tabs + 模块分类侧边栏
+ * - 简单模式：无Tabs和模块分类
+ * 
  * @param {boolean} open - 抽屉显示状态
  * @param {Function} onClose - 关闭抽屉回调
- * @param {Function} onConfirm - 确认开通权限回调
+ * @param {Function} onConfirm - 确认回调
+ * @param {string} title - 抽屉标题
+ * @param {string} className - 自定义类名
  * @param {string} appId - 应用ID
+ * @param {Array} selectedItems - 已选择的资源列表
+ * @param {boolean} subscribeLoading - 订阅加载状态
+ * @param {string} placeholder - 搜索框占位符
+ * @param {Function} fetchCategories - 获取分类列表的方法
+ * @param {Function} fetchData - 获取数据列表的方法
+ * @param {Function} getColumns - 获取表格列配置的方法
+ * @param {boolean} showAdvancedFeatures - 是否显示高级功能（API管理=true，回调/事件=false）
+ * @param {Object} advancedConfig - 高级功能配置
  */
-function ApiPermissionDrawer({ open, onClose, onConfirm, appId }) {
-  // 是否启用身份权限功能开关（仅控制第一层Tab是否显示）
-  const enableIdentityPermission = true;
-  
-  // 根据 appId 获取应用信息，判断是业务应用还是个人应用
-  const appInfo = appId ? mockAppInfo[appId] : null;
-  const appType = appInfo && appInfo.eamap ? 'business' : 'person';
-
+function ResourceDrawer({
+  open,
+  onClose,
+  onConfirm,
+  title = '添加资源',
+  className = 'resource-drawer',
+  appId,
+  selectedItems = [],
+  subscribeLoading = false,
+  placeholder = '资源名称/标识',
+  fetchCategories,
+  fetchData,
+  getColumns,
+  showAdvancedFeatures = false,
+  advancedConfig = {},
+}) {
+  // ==================== 状态定义 ====================
   // Tab配置状态
-  const [tabConfig, setTabConfig] = useState({
-    firstLevelTabs: [],
-    secondLevelTabs: []
-  });
-  
+  const [tabConfig, setTabConfig] = useState({ firstLevelTabs: [], secondLevelTabs: [] });
   // 当前选中的身份类型
   const [activeIdentityType, setActiveIdentityType] = useState('');
   // 当前选中的API类型
@@ -79,60 +58,32 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appId }) {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   // 分页配置对象
   const [pagination, setPagination] = useState(INIT_PAGECONFIG);
-  // API列表数据
-  const [apisData, setApisData] = useState([]);
+  // 数据列表
+  const [data, setData] = useState([]);
   // 模块列表数据（侧边栏）
   const [modulesData, setModulesData] = useState([]);
   // 数据加载状态
   const [loading, setLoading] = useState(false);
-  // 搜索关键词（权限名称/Scope合并搜索）
+  // 搜索关键词
   const [filterKeyword, setFilterKeyword] = useState('');
   // 是否需要审核筛选条件
   const [filterNeedReview, setFilterNeedReview] = useState('all');
 
-  /**
-   * 解析原始接口数据，返回指定应用类型的Tab配置
-   * @param {Object} rawData - 原始接口响应数据
-   * @param {string} targetAppType - 应用类型：'business'（业务应用）或 'person'（个人应用）
-   * @returns {Object} 解析后的Tab配置 { firstLevelTabs, secondLevelTabs }
-   */
-  const parseTabConfig = (rawData, targetAppType) => {
-    try {
-      if (!rawData?.data?.lookups?.[TAB_CONFIG_SEARCH_KEY]?.items) {
-        return { firstLevelTabs: [], secondLevelTabs: [] };
-      }
-      
-      const items = rawData.data.lookups[TAB_CONFIG_SEARCH_KEY].items;
-      const targetItem = items.find(item => item.itemCode === targetAppType);
-      
-      if (!targetItem?.itemValue) {
-        return { firstLevelTabs: [], secondLevelTabs: [] };
-      }
-      
-      const parsedTabs = JSON.parse(targetItem.itemValue);
-      return {
-        firstLevelTabs: parsedTabs,
-        secondLevelTabs: parsedTabs[0]?.children || []
-      };
-    } catch (error) {
-      return { firstLevelTabs: [], secondLevelTabs: [] };
-    }
-  };
-
-  /**
-   * 加载Tab配置
-   * 抽屉打开时调用一次，缓存到组件状态
-   * 数据处理逻辑在此处完成
-   */
+  // ==================== 加载Tab配置 ====================
   const loadTabConfig = async () => {
+    if (!advancedConfig.fetchTabConfig) return null;
+    
     setLoading(true);
     try {
-      // 调用接口时传入 searchKey 参数
-      const rawData = await fetchTabConfig(TAB_CONFIG_SEARCH_KEY);
+      const rawData = await advancedConfig.fetchTabConfig(advancedConfig.tabSearchKey);
       
       if (rawData && rawData.code === 200) {
+        // 根据 appId 获取应用信息，判断是业务应用还是个人应用
+        const appInfo = advancedConfig.mockAppInfo?.[appId];
+        const appType = appInfo && appInfo.eamap ? 'business' : 'person';
+        
         // 数据处理：根据应用类型筛选并解析数据
-        const parsedConfig = parseTabConfig(rawData, appType);
+        const parsedConfig = parseTabConfig(rawData, appType, advancedConfig.tabSearchKey);
         
         setTabConfig({
           firstLevelTabs: parsedConfig.firstLevelTabs,
@@ -161,16 +112,14 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appId }) {
     }
   };
 
-  /**
-   * 加载模块列表
-   * @param {string} identityType - 身份类型
-   * @param {string} apiType - API类型
-   */
+  // ==================== 加载模块列表 ====================
   const loadModules = async (apiType) => {
     setLoading(true);
     const categoriesRes = await fetchCategories(apiType);
     if (categoriesRes && categoriesRes.code === '200') {
-      const transformedModules = transformCategoriesToModules(categoriesRes.data || []);
+      const transformedModules = advancedConfig.transformModules 
+        ? advancedConfig.transformModules(categoriesRes.data || [])
+        : transformCategoriesToModules(categoriesRes.data || []);
       setModulesData(transformedModules);
       return transformedModules;
     } else {
@@ -180,62 +129,70 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appId }) {
     }
   };
 
-  /**
-   * 加载API列表
-   * @param {Object} params - 可选的参数覆盖
-   * @param {Array} modules - 可选的手动传入的模块列表
-   * @param {string} activeModuleKey - 可选的手动传入的当前选中模块key
-   */
-  const loadApis = async (params = {}, modules = null, activeModuleKey = null) => {
+  // ==================== 加载数据列表 ====================
+  const loadData = async (params = {}, modules = null, activeModuleKey = null) => {
     setLoading(true);
     let currentCategoryId;
-    const targetModules = modules || modulesData;
-    const currentModule = activeModuleKey !== null ? activeModuleKey : activeModule;
     
-    if (currentModule === 'all') {
-      currentCategoryId = targetModules[0]?.value || ''
-    } else {
-      const selectModule = targetModules.find(module => module.key === currentModule);
-      currentCategoryId = selectModule?.value || ''
-    }
+    if (showAdvancedFeatures) {
+      // 高级模式：需要根据模块选择来获取 categoryId
+      const targetModules = modules || modulesData;
+      const currentModule = activeModuleKey !== null ? activeModuleKey : activeModule;
+      
+      if (currentModule === 'all') {
+        currentCategoryId = targetModules[0]?.value || ''
+      } else {
+        const selectModule = targetModules.find(module => module.key === currentModule);
+        currentCategoryId = selectModule?.value || ''
+      }
 
-    if (!currentCategoryId) {
-      setLoading(false);
-      return;
+      if (!currentCategoryId) {
+        setLoading(false);
+        return;
+      }
+    } else {
+      // 简单模式：优先使用传入的 categoryId，否则使用默认值
+      currentCategoryId = params.categoryId || modulesData[0]?.value || '';
+      if (!currentCategoryId) {
+        setLoading(false);
+        return;
+      }
     }
     
     const defaultParams = {
-      identityType: activeIdentityType,
-      apiType: activeApiType,
+      // 高级模式下需要的参数
+      ...(showAdvancedFeatures && {
+        identityType: activeIdentityType,
+        apiType: activeApiType,
+      }),
+      // 统一使用计算后的 categoryId
+      categoryId: currentCategoryId,
       keyword: filterKeyword,
       needReview: filterNeedReview,
-      categoryId: currentCategoryId,
       curPage: pagination.curPage,
       pageSize: pagination.pageSize,
       appId: appId,
       ...params
     };
     
-    const result = await fetchApis(defaultParams);
+    const result = await fetchData(defaultParams);
     if (result && result.code === '200') {
       const resultData = result.data || [];
       const resultTotal = result.total || resultData.length;
-      setApisData(resultData);
+      setData(resultData);
       setPagination(prev => ({ ...prev, total: resultTotal }));
     } else if (Array.isArray(result?.data)) {
-      setApisData(result.data);
+      setData(result.data);
       setPagination(prev => ({ ...prev, total: result.total || result.data.length }));
     } else {
-      message.error(result?.message || result?.messageZh || '加载API列表失败');
-      setApisData([]);
+      message.error(result?.message || result?.messageZh || '加载列表失败');
+      setData([]);
       setPagination(prev => ({ ...prev, total: 0 }));
     }
     setLoading(false);
   };
 
-  /**
-   * 抽屉打开时初始化状态并加载数据
-   */
+  // ==================== 抽屉打开时初始化 ====================
   useEffect(() => {
     if (!open) return;
     
@@ -244,42 +201,52 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appId }) {
     setFilterKeyword('');
     setFilterNeedReview('all');
     setPagination(INIT_PAGECONFIG);
-    setSelectedRowKeys([]);
+    setSelectedRowKeys(selectedItems.map(item => item.id));
     
     const initData = async () => {
-      // 1. 加载Tab配置
-      const tabResult = await loadTabConfig();
-      
-      if (!tabResult) {
-        return;
+      if (showAdvancedFeatures) {
+        // 高级模式：加载Tab配置
+        const tabResult = await loadTabConfig();
+        
+        if (!tabResult) {
+          return;
+        }
+        
+        // 加载模块列表
+        const modules = await loadModules(tabResult.firstChildTab.key);
+        
+        // 加载数据列表
+        await loadData({ needReview: 'all', keyword: '' }, modules, 'all');
+      } else {
+        // 简单模式：直接加载分类和数据
+        const categoriesRes = await fetchCategories();
+        if (categoriesRes && categoriesRes.code === '200') {
+          const rootId = categoriesRes.data?.[0]?.id;
+          if (rootId) {
+            setModulesData([{ key: 'all', value: rootId, name: '全部分类' }]);
+            await loadData({ categoryId: rootId, needReview: 'all', keyword: '' }, [{ key: 'all', value: rootId }], 'all');
+          }
+        } else {
+          message.error(categoriesRes?.message || '加载分类失败');
+        }
       }
-      
-      // 2. 加载模块列表
-      const modules = await loadModules(tabResult.firstChildTab.key);
-      
-      // 3. 加载API列表
-      await loadApis({ needReview: 'all', keyword: '' }, modules, 'all');
     };
     
     initData();
-  }, [open]);
+  }, [open, selectedItems]);
 
-  /**
-   * 处理模块点击事件
-   */
+  // ==================== 事件处理 ====================
+  
+  // 处理模块点击
   const handleModuleClick = async (module) => {
     setActiveModule(module.key);
     setPagination(INIT_PAGECONFIG);
     setSelectedRowKeys([]);
-    await loadApis({ curPage: 1 }, null, module.key);
+    await loadData({ curPage: 1 }, null, module.key);
   };
 
-  /**
-   * 处理身份类型Tab切换
-   * 切换一级Tab时，更新二级Tab列表和默认选中项
-   */
+  // 处理身份类型Tab切换
   const handleIdentityChange = async (identityType) => {
-    // 查找当前选中的一级Tab
     const currentFirstTab = tabConfig.firstLevelTabs.find(tab => tab.key === identityType);
     const newSecondLevelTabs = currentFirstTab?.children || [];
     const defaultSecondLevel = newSecondLevelTabs[0]?.key || '';
@@ -292,10 +259,9 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appId }) {
     setPagination(INIT_PAGECONFIG);
     setSelectedRowKeys([]);
     
-    // 重新加载模块列表和API列表
     if (defaultSecondLevel) {
       const modules = await loadModules(defaultSecondLevel);
-      await loadApis({
+      await loadData({
         identityType,
         apiType: defaultSecondLevel,
         keyword: '',
@@ -306,9 +272,7 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appId }) {
     }
   };
 
-  /**
-   * 处理API类型Tab切换
-   */
+  // 处理API类型Tab切换
   const handleApiTypeChange = async (type) => {
     setActiveApiType(type);
     setActiveModule('all');
@@ -318,7 +282,7 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appId }) {
     setSelectedRowKeys([]);
     
     const modules = await loadModules(type);
-    await loadApis({
+    await loadData({
       identityType: activeIdentityType,
       apiType: type,
       keyword: '',
@@ -328,9 +292,7 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appId }) {
     }, modules, 'all');
   };
 
-  /**
-   * 处理分页变化
-   */
+  // 处理分页变化
   const handlePageChange = async (page, newPageSize) => {
     const newPagination = {
       ...pagination,
@@ -338,81 +300,67 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appId }) {
       ...(newPageSize && newPageSize !== pagination.pageSize ? { pageSize: newPageSize } : {})
     };
     setPagination(newPagination);
-    await loadApis({ 
+    await loadData({ 
       curPage: page, 
       pageSize: newPageSize || pagination.pageSize 
     }, null, activeModule);
   };
 
-  /**
-   * 处理表格选中行变化
-   * @param {Array} keys - 选中行的key数组
-   */
+  // 处理表格选中行变化
   const handleSelectChange = (keys) => {
     setSelectedRowKeys(keys);
   };
 
-  /**
-   * 处理确认开通权限
-   * 将选中的API传递给父组件
-   */
+  // 处理确认
   const handleConfirm = () => {
-    const selectedApis = apisData.filter(api => selectedRowKeys.includes(api.id));
-    onConfirm(selectedApis);
+    const selected = data.filter(item => selectedRowKeys.includes(item.id));
+    onConfirm(selected);
     setSelectedRowKeys([]);
     setPagination(INIT_PAGECONFIG);
     onClose();
   };
 
-  /**
-   * 处理关键词输入变化
-   */
+  // 处理关键词输入变化
   const handleFilterChange = async (e) => {
     const keyword = e.target.value;
     setFilterKeyword(keyword);
     setPagination(INIT_PAGECONFIG);
-    await loadApis({ keyword, curPage: 1 }, null, activeModule);
+    await loadData({ keyword, curPage: 1 }, null, activeModule);
   };
 
-  /**
-   * 处理是否需要审核筛选变化
-   */
+  // 处理是否需要审核筛选变化
   const handleNeedReviewChange = async (value) => {
     setFilterNeedReview(value);
     setPagination(INIT_PAGECONFIG);
-    await loadApis({ needReview: value, curPage: 1 }, null, activeModule);
+    await loadData({ needReview: value, curPage: 1 }, null, activeModule);
   };
 
+  // 处理打开文档
   const handleOpenDoc = (docUrl) => {
     if (docUrl) {
       window.open(docUrl, '_blank');
     }
   };
 
-  const columns = getApiPermissionDrawerColumns({ handleOpenDoc });
+  const columns = getColumns();
 
   // 表格行选择器配置
   const rowSelection = {
     selectedRowKeys,
     onChange: handleSelectChange,
     getCheckboxProps: (record) => ({
-      disabled: record.isSubscribed !== 99,  // 已订阅的权限禁用勾选
+      disabled: record.isSubscribed !== 99,
     }),
   };
 
-  /**
-   * 渲染第一层Tab（身份权限Tab）
-   * 仅在一级Tab数量大于0时显示
-   */
-  const renderFirstLevelTabs = () => {
-    if (!enableIdentityPermission) {
-      return null;
-    }
+  // ==================== 条件渲染 ====================
+  
+  // 渲染第一层Tabs（仅 showAdvancedFeatures=true 时显示）
+  const renderFirstLevelTabs = useCallback(() => {
+    if (!showAdvancedFeatures) return null;
     
     const tabs = tabConfig.firstLevelTabs;
-    if (!tabs || tabs.length <= 0) {
-      return null;
-    }
+    if (!tabs || tabs.length <= 0) return null;
     
     return (
       <Tabs
@@ -424,19 +372,16 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appId }) {
         ))}
       </Tabs>
     );
-  };
-
-  /**
-   * 渲染第二层Tab（API类型Tab）
-   * 显示当前选中的一级Tab下的所有二级Tab
-   */
-  const renderSecondLevelTabs = () => {
+  }, [showAdvancedFeatures, tabConfig, activeIdentityType]);
+  
+  // 渲染第二层Tabs（仅 showAdvancedFeatures=true 时显示）
+  const renderSecondLevelTabs = useCallback(() => {
+    if (!showAdvancedFeatures) return null;
+    
     const firstLevelTab = tabConfig.firstLevelTabs.find(tab => tab.key === activeIdentityType);
     const apiTabs = firstLevelTab?.children || [];
     
-    if (apiTabs.length === 0) {
-      return null;
-    }
+    if (apiTabs.length === 0) return null;
     
     return (
       <Tabs
@@ -448,35 +393,63 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appId }) {
         ))}
       </Tabs>
     );
-  };
+  }, [showAdvancedFeatures, tabConfig, activeIdentityType, activeApiType]);
+  
+  // 渲染模块侧边栏（仅 showAdvancedFeatures=true 时显示）
+  const renderModuleSidebar = useCallback(() => {
+    if (!showAdvancedFeatures) return null;
+    
+    return (
+      <div className="drawer-sidebar">
+        <ul className="module-list">
+          {modulesData.map(module => (
+            <li
+              key={module.key}
+              className={`module-item ${activeModule === module.key ? 'active' : ''}`}
+              onClick={() => handleModuleClick(module)}
+            >
+              {module.name}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }, [showAdvancedFeatures, modulesData, activeModule]);
 
+  // ==================== 主渲染 ====================
   return (
     <Drawer
-      title="开通权限"
+      title={title}
       placement="right"
-      width={900}
+      width={DRAWER_WIDTH}
       onClose={onClose}
       open={open}
-      className="api-permission-drawer"
+      className={`resource-drawer ${className || ''}`}
       footer={
         <div className="drawer-footer">
           <Button onClick={onClose}>取消</Button>
           <Button
             type="primary"
-            disabled={selectedRowKeys.length === 0}
+            disabled={selectedRowKeys.length === 0 || subscribeLoading}
+            loading={subscribeLoading}
             onClick={handleConfirm}
           >
-            确认开通权限
+            确认添加
           </Button>
         </div>
       }
     >
       <div className="drawer-content">
+        {/* 第一层Tabs - 条件渲染 */}
         {renderFirstLevelTabs()}
+        
+        {/* 第二层Tabs - 条件渲染 */}
         {renderSecondLevelTabs()}
+        
+        {/* 筛选区域 - 始终显示 */}
         <div className="drawer-filter">
           <Input
-            placeholder="权限名称/Scope"
+            placeholder={placeholder}
             value={filterKeyword}
             onChange={handleFilterChange}
             style={{ width: 200 }}
@@ -490,25 +463,18 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appId }) {
             style={{ width: 150 }}
           />
         </div>
+        
+        {/* 主内容区域 - 差异化布局 */}
         <div className="drawer-main">
-          <div className="drawer-sidebar">
-            <ul className="module-list">
-              {modulesData.map(module => (
-                <li
-                  key={module.key}
-                  className={`module-item ${activeModule === module.key ? 'active' : ''}`}
-                  onClick={() => handleModuleClick(module)}
-                >
-                  {module.name}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="drawer-table">
+          {/* 模块侧边栏 - 条件渲染 */}
+          {renderModuleSidebar()}
+          
+          {/* 表格区域 - 始终显示 */}
+          <div className={showAdvancedFeatures ? "drawer-table" : "drawer-table-full"}>
             <Table
               rowSelection={rowSelection}
               columns={columns}
-              dataSource={apisData}
+              dataSource={data}
               rowKey="id"
               pagination={false}
               loading={loading}
@@ -532,4 +498,4 @@ function ApiPermissionDrawer({ open, onClose, onConfirm, appId }) {
   );
 }
 
-export default ApiPermissionDrawer;
+export default ResourceDrawer;

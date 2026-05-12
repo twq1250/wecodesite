@@ -1,65 +1,129 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button, Table, Spin, Empty, Pagination } from 'antd';
-import { fetchApiList, deleteApi } from './thunk';
+import React, { useState, useEffect } from 'react';
+import { message, Button } from 'antd';
+import { fetchApiList, deleteApi, fetchApiDetail, createApi, updateApi } from './thunk';
 import { fetchCategoryTree } from '../Category/thunk';
-import { useAdminList } from '../../../hooks/useAdminList';
 import AdminTableToolbar from '../../../components/AdminTableToolbar/AdminTableToolbar';
-import { getApiListColumns } from './constants';
-import { PAGE_SIZE_OPTIONS } from '../../../utils/constants';
-import { isInAdminWhitelist } from '../../../utils/common';
-import ApiRegister from './ApiRegister';
+import PageList from '../../../components/PageList/PageList';
+import ResourceRegister from '../../../components/ResourceRegister';
 import SimpleSidebar from '../../../components/SimpleSidebar/SimpleSidebar';
+import { pageInfo, getApiListColumns } from './constants';
+import { INIT_PAGECONFIG, PROPERTY_PRESETS } from '../../../utils/constants';
 import './ApiList.m.less';
 
 function ApiList() {
-  const navigate = useNavigate();
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState(INIT_PAGECONFIG);
+  const [keyword, setKeyword] = useState('');
+  const [categoryId, setCategoryId] = useState(undefined);
+  const [status, setStatus] = useState(undefined);
+  const [categories, setCategories] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null);
+  const [mode, setMode] = useState('create');
 
-  const init = async () => {
-    const canShow = await isInAdminWhitelist();
-    if (!canShow) {
-      navigate('/apps');
+  const apiList = data;
+
+  const loadCategories = async () => {
+    const result = await fetchCategoryTree();
+    if (result && result.code === '200') {
+      setCategories(result.data || []);
+    } else {
+      message.error(result?.message || '加载分类失败');
     }
-  }
+  };
 
-  useEffect(() => {
-    init();
-  }, []);
+  const loadData = async (params = {}) => {
+    setLoading(true);
+    const finalKeyword = params.keyword ?? keyword;
+    const finalCategoryId = params.categoryId ?? categoryId;
+    const finalStatus = params.status ?? status;
+    const finalPage = params.curPage ?? pagination.curPage;
+    const finalSize = params.pageSize ?? pagination.pageSize;
 
-  const {
-    categories,
-    closeModal,
-    currentItem,
-    data: apiList,
-    handleAdd,
-    handleCategoryChange,
-    handleDelete,
-    handleEdit,
-    handlePageChange,
-    handleSearch,
-    handleStatusChange,
-    handleSuccess,
-    handleView,
-    keyword,
-    loadCategories,
-    loadData,
-    loading,
-    mode,
-    modalVisible,
-    pagination,
-    setKeyword,
-    status,
-    categoryId,
-  } = useAdminList({
-    fetchCategories: fetchCategoryTree,
-    deleteItem: deleteApi,
-    fetchList: fetchApiList,
-  });
+    const result = await fetchApiList({
+      keyword: finalKeyword,
+      categoryId: finalCategoryId,
+      status: finalStatus,
+      curPage: finalPage,
+      pageSize: finalSize,
+    });
+
+    if (result && result.code === '200') {
+      setData(result.data || []);
+      setPagination(prev => ({
+        ...prev,
+        total: result.page?.total || 0,
+        curPage: finalPage,
+        pageSize: finalSize
+      }));
+    } else {
+      message.error(result?.message || '加载列表失败');
+    }
+
+    setLoading(false);
+  };
+
+  const handleSearch = () => {
+    loadData({ curPage: 1 });
+  };
+
+  const handlePageChange = (page, size) => {
+    loadData({ curPage: page, pageSize: size });
+  };
+
+  const handleCategoryChange = (value) => {
+    setCategoryId(value);
+    loadData({ categoryId: value });
+  };
+
+  const handleStatusChange = (value) => {
+    setStatus(value);
+    loadData({ status: value });
+  };
+
+  const handleAdd = () => {
+    setCurrentItem(null);
+    setMode('create');
+    setModalVisible(true);
+  };
+
+  const handleEdit = (record) => {
+    setCurrentItem({ id: record.id });
+    setMode('edit');
+    setModalVisible(true);
+  };
+
+  const handleView = (record) => {
+    setCurrentItem({ id: record.id });
+    setMode('view');
+    setModalVisible(true);
+  };
+
+  const handleDelete = async (id) => {
+    const res = await deleteApi(id);
+    if (res && res.code === '200') {
+      message.success('删除成功');
+      loadData();
+    } else {
+      message.error(res?.message || '删除失败');
+    }
+  };
+
+  const handleSuccess = () => {
+    setModalVisible(false);
+    loadData();
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setCurrentItem(null);
+  };
 
   useEffect(() => {
     loadCategories();
     loadData();
-  }, [loadCategories, loadData]);
+  }, []);
 
   const columns = getApiListColumns({
     handleView,
@@ -71,14 +135,14 @@ function ApiList() {
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <SimpleSidebar />
       <div style={{ flex: 1, overflow: 'auto' }}>
-        <div className="api-list">
+        <div className="api-management-page">
           <div className="page-header">
             <div className="page-header-left">
-              <h4 className="page-title">API管理</h4>
-              <span className="page-desc">管理API接口，配置API权限</span>
+              <h4 className="page-title">{pageInfo.title}</h4>
+              <span className="page-desc">{pageInfo.description}</span>
             </div>
             <Button type="primary" onClick={handleAdd} style={{ justifyContent: 'center', borderRadius: 6 }}>
-              注册API
+              {pageInfo.addButtonText}
             </Button>
           </div>
 
@@ -94,38 +158,28 @@ function ApiList() {
             onStatusChange={handleStatusChange}
           />
 
-          <Spin spinning={loading}>
-            {apiList.length > 0 ? (
-              <>
-                <div className="table-wrapper">
-                  <Table
-                    columns={columns}
-                    dataSource={apiList}
-                    rowKey="id"
-                    pagination={false}
-                  />
-                </div>
-                <div style={{ marginTop: 16, textAlign: 'right' }}>
-                  <Pagination
-                    total={pagination.total}
-                    current={pagination.curPage}
-                    pageSize={pagination.pageSize}
-                    pageSizeOptions={PAGE_SIZE_OPTIONS}
-                    showSizeChanger
-                    showQuickJumper
-                    showTotal={(total) => `共 ${total} 条`}
-                    onChange={handlePageChange}
-                  />
-                </div>
-              </>
-            ) : (
-              <Empty description="暂无API数据" />
-            )}
-          </Spin>
+          <PageList
+            columns={columns}
+            dataSource={apiList}
+            loading={loading}
+            pagination={{
+              curPage: pagination.curPage,
+              pageSize: pagination.pageSize,
+              total: pagination.total,
+            }}
+            onPageChange={handlePageChange}
+          />
 
-          <ApiRegister
+          <ResourceRegister
             visible={modalVisible}
-            api={currentItem}
+            resource={currentItem}
+            resourceType="api"
+            thunk={{
+              fetchDetail: fetchApiDetail,
+              create: createApi,
+              update: updateApi,
+            }}
+            propertyPresets={PROPERTY_PRESETS}
             mode={mode}
             onSuccess={handleSuccess}
             onCancel={closeModal}
