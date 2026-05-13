@@ -1,3 +1,7 @@
+/**
+ * Admin模块 - 回调管理页面组件
+ * 功能：管理员视角的回调列表管理，支持回调的创建、查看、编辑和删除操作
+ */
 import React, { useState, useEffect } from 'react';
 import { message, Button } from 'antd';
 import { fetchCategoryTree } from '../Category/thunk';
@@ -11,6 +15,10 @@ import { PROPERTY_PRESETS, INIT_PAGECONFIG } from '../../../utils/constants';
 import './CallbackList.m.less';
 import { pageInfo } from './constants';
 
+/**
+ * 回调管理列表页面组件
+ * 提供回调的增删改查功能，支持分类筛选和状态筛选
+ */
 function CallbackList() {
   const [mode, setMode] = useState('create');
   const [currentItem, setCurrentItem] = useState(null);

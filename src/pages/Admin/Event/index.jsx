@@ -1,3 +1,7 @@
+/**
+ * Admin模块 - 事件管理页面组件
+ * 功能：管理员视角的事件列表管理，支持事件的创建、查看、编辑和删除操作
+ */
 import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { message, Button } from 'antd';
@@ -12,6 +16,10 @@ import { getEventListColumns } from './constants';
 import { pageInfo } from './constants';
 import './EventList.m.less';
 
+/**
+ * 事件管理列表页面组件
+ * 提供事件的增删改查功能，支持分类筛选和状态筛选
+ */
 function EventList() {
   const [modalVisible, setModalVisible] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);

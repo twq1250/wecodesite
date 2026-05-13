@@ -1,3 +1,7 @@
+/**
+ * API管理页面组件
+ * 功能：应用视角的API订阅管理，支持API的订阅、撤回、删除和审批地址复制
+ */
 import React, { useState, useEffect } from 'react';
 import { message } from 'antd';
 import PageHeader from '../../components/PageHeader/PageHeader';
@@ -13,6 +17,10 @@ import { mockAppInfo } from '../BasicInfo/mock';
 import { INIT_PAGECONFIG } from '../../utils/constants';
 import './ApiManagement.m.less';
 
+/**
+ * API管理页面组件
+ * 提供应用API订阅功能，支持订阅申请、撤回和删除已订阅的API
+ */
 function ApiManagement() {
   const appId = queryParams('appId');
 

@@ -1,3 +1,7 @@
+/**
+ * Admin模块 - 分类管理页面组件
+ * 功能：管理员视角的分类树结构管理，支持分类的增删改、负责人管理和搜索功能
+ */
 import React, { useState, useEffect } from 'react';
 import {
   Button,
@@ -22,6 +26,10 @@ import { isInAdminWhitelist } from '../../../utils/common';
 import SimpleSidebar from '../../../components/SimpleSidebar/SimpleSidebar';
 import './CategoryList.m.less';
 
+/**
+ * 分类管理列表页面组件
+ * 提供分类的增删改功能，支持分类负责人管理和搜索
+ */
 function CategoryList() {
   const navigate = useNavigate();
 

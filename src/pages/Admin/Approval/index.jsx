@@ -1,3 +1,7 @@
+/**
+ * Admin模块 - 审批中心页面组件
+ * 功能：管理员审批权限申请，提供待审批、我发起的、全部和审批流程配置等功能
+ */
 import React, { useState, useEffect } from 'react';
 import {
   Button,
@@ -25,6 +29,10 @@ import './ApprovalCenter.m.less';
 import { INIT_PAGECONFIG, PAGE_SIZE_OPTIONS } from '../../../utils/constants';
 import { isInAdminWhitelist } from '../../../utils/common';
 
+/**
+ * 审批中心页面组件
+ * 提供审批申请管理，包括通过、驳回、查看详情等功能
+ */
 function ApprovalCenter() {
   const [loading, setLoading] = useState(false); 
   const [approvalList, setApprovalList] = useState([]);

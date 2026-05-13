@@ -1,14 +1,24 @@
+/**
+ * Admin模块 - API管理页面常量配置
+ * 定义页面元信息、选项列表和表格列配置
+ */
 import React from 'react';
 import { Tag } from 'antd';
 import { AUTH_TYPE } from '../../../utils/constants';
 import { adminTableBaseColumn } from '../../../utils/commonTableConfigs';
 
+/**
+ * 页面元信息配置
+ */
 export const pageInfo = {
   title: 'API管理',
   description: '管理API接口，配置API权限',
   addButtonText: '注册API',
 };
 
+/**
+ * HTTP方法选项配置
+ */
 export const HTTP_METHOD_OPTIONS = [
   { value: 'GET', label: 'GET' },
   { value: 'POST', label: 'POST' },
@@ -17,6 +27,9 @@ export const HTTP_METHOD_OPTIONS = [
   { value: 'PATCH', label: 'PATCH' },
 ];
 
+/**
+ * 认证类型选项配置
+ */
 export const AUTH_TYPE_OPTIONS = [
   { value: 0, label: 'Cookie' },
   { value: 1, label: 'SOA' },
@@ -27,6 +40,11 @@ export const AUTH_TYPE_OPTIONS = [
   { value: 6, label: 'CLITOKEN' },
 ];
 
+/**
+ * 生成API列表表格列配置
+ * @param {Object} callbacks - 回调函数对象，包含 handleView（查看）、handleEdit（编辑）、handleDelete（删除）
+ * @returns {Array} 表格列配置数组
+ */
 export const getApiListColumns = ({ handleView, handleEdit, handleDelete }) => {
   const baseColumn = adminTableBaseColumn({ handleView, handleEdit, handleDelete });
   return [

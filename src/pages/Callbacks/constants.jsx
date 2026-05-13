@@ -1,3 +1,11 @@
+/**
+ * 回调配置页面常量配置
+ * 定义页面元信息
+ */
+
+/**
+ * 页面元信息配置
+ */
 export const pageInfo = {
   title: '回调配置',
   description: '配置API回调地址',

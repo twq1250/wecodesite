@@ -1,3 +1,7 @@
+/**
+ * Admin模块 - API管理页面组件
+ * 功能：管理员视角的API列表管理，支持API的创建、查看、编辑和删除操作
+ */
 import React, { useState, useEffect } from 'react';
 import { message, Button } from 'antd';
 import { fetchApiList, deleteApi, fetchApiDetail, createApi, updateApi } from './thunk';
@@ -10,6 +14,10 @@ import { pageInfo, getApiListColumns } from './constants';
 import { INIT_PAGECONFIG, PROPERTY_PRESETS } from '../../../utils/constants';
 import './ApiList.m.less';
 
+/**
+ * API管理列表页面组件
+ * 提供API的增删改查功能，支持分类筛选和状态筛选
+ */
 function ApiList() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);

@@ -1,6 +1,6 @@
 /**
- * API 管理相关 API
- * 用于应用订阅 API 权限
+ * API管理模块 - API相关接口调用
+ * 用于应用订阅API权限、管理已订阅的API
  */
 import { API_CONFIG, buildApiUrl, fetchApi } from '../../configs/web.config';
 

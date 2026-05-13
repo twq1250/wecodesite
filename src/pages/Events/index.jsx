@@ -1,3 +1,7 @@
+/**
+ * 事件配置页面组件
+ * 功能：应用视角的事件订阅管理，支持事件的订阅、配置、撤回、删除和审批地址复制
+ */
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { message } from 'antd';
@@ -14,6 +18,10 @@ import { pageInfo } from './constants';
 import { withdrawApproval, deleteAppEventSubscription, subscribeEvents, fetchAppEvents, fetchEventCategories, fetchEvents, configEventSubscription } from './thunk';
 import './Events.m.less';
 
+/**
+ * 事件配置页面组件
+ * 提供应用事件订阅功能，支持订阅申请、配置、撤回和删除已订阅的事件
+ */
 function Events() {
   const appId = queryParams('appId');
   

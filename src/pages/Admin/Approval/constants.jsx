@@ -1,14 +1,24 @@
+/**
+ * Admin模块 - 审批管理页面常量配置
+ * 定义审批级别映射、表格列配置
+ */
 import React from 'react';
 import { Tag, Button, Space, Popconfirm } from 'antd';
 import { CheckOutlined, CloseOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { SUBSCRIPTION_STATUS } from '../../../utils/constants';
 
+/**
+ * 审批级别映射配置
+ */
 export const LEVEL_MAP = {
   'resource': { text: '资源审批', color: 'blue' },
   'scene': { text: '场景审批', color: 'orange' },
   'global': { text: '全局审批', color: 'green' },
 };
 
+/**
+ * 业务信息表格列配置（待审批列表、我发起的、全部共用）
+ */
 export const BUSINESS_COLUMNS = [
   {
     title: '业务类型',
@@ -42,6 +52,11 @@ export const BUSINESS_COLUMNS = [
   },
 ];
 
+/**
+ * 生成待审批列表表格列配置（我的待审）
+ * @param {Object} callbacks - 回调函数对象，包含 handleViewDetail（查看详情）、handleApprove（通过）、handleReject（拒绝）
+ * @returns {Array} 表格列配置数组
+ */
 export const getApprovalColumns = ({ handleViewDetail, handleApprove, handleReject }) => [
   {
     title: '申请编号',
@@ -80,6 +95,11 @@ export const getApprovalColumns = ({ handleViewDetail, handleApprove, handleReje
   },
 ];
 
+/**
+ * 生成我发起的审批表格列配置
+ * @param {Object} callbacks - 回调函数对象，包含 handleViewDetail（查看详情）
+ * @returns {Array} 表格列配置数组
+ */
 export const getMyApprovalColumns = ({ handleViewDetail }) => [
   {
     title: '申请编号',
@@ -100,6 +120,11 @@ export const getMyApprovalColumns = ({ handleViewDetail }) => [
   },
 ];
 
+/**
+ * 生成全部审批表格列配置
+ * @param {Object} callbacks - 回调函数对象，包含 handleViewDetail（查看详情）
+ * @returns {Array} 表格列配置数组
+ */
 export const getAllApprovalColumns = ({ handleViewDetail }) => [
   {
     title: '申请编号',
@@ -126,6 +151,11 @@ export const getAllApprovalColumns = ({ handleViewDetail }) => [
   },
 ];
 
+/**
+ * 生成审批流程配置表格列配置
+ * @param {Object} callbacks - 回调函数对象，包含 handleEdit（编辑）、handleDelete（删除）
+ * @returns {Array} 表格列配置数组
+ */
 export const getApprovalFlowColumns = ({ handleEdit, handleDelete }) => [
   {
     title: '流程ID',

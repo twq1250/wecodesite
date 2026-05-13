@@ -1,3 +1,7 @@
+/**
+ * 回调配置页面组件
+ * 功能：应用视角的回调订阅管理，支持回调的订阅、配置、撤回、删除和审批地址复制
+ */
 import React, { useEffect, useState } from 'react';
 import { message } from 'antd';
 import { queryParams, getPageClassPrefix } from '../../utils/common';
@@ -13,6 +17,10 @@ import { createCallbackDrawerColumns, createCallbackColumns } from '../../utils/
 import { pageInfo } from './constants';
 import './Callbacks.m.less';
 
+/**
+ * 回调配置页面组件
+ * 提供应用回调订阅功能，支持订阅申请、配置、撤回和删除已订阅的回调
+ */
 function Callbacks() {
   const appId = queryParams('appId');
   
