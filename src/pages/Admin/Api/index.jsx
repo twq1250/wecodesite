@@ -8,7 +8,7 @@ import { fetchApiList, deleteApi, fetchApiDetail, createApi, updateApi } from '.
 import { fetchCategoryTree } from '../Category/thunk';
 import AdminTableToolbar from '../../../components/AdminTableToolbar/AdminTableToolbar';
 import PageList from '../../../components/PageList/PageList';
-import ResourceRegister from '../../../components/ResourceRegister';
+import ResourceRegister from '../../../components/ResourceRegister/ResourceRegister';
 import SimpleSidebar from '../../../components/SimpleSidebar/SimpleSidebar';
 import { pageInfo, getApiListColumns } from './constants';
 import { INIT_PAGECONFIG, PROPERTY_PRESETS } from '../../../utils/constants';

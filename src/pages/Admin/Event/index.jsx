@@ -9,7 +9,7 @@ import { fetchCategoryTree } from '../Category/thunk';
 import { updateEvent, createEvent, fetchEventDetail, fetchEventList, deleteEvent } from './thunk';
 import AdminTableToolbar from '../../../components/AdminTableToolbar/AdminTableToolbar';
 import PageList from '../../../components/PageList/PageList';
-import ResourceRegister from '../../../components/ResourceRegister';
+import ResourceRegister from '../../../components/ResourceRegister/ResourceRegister';
 import SimpleSidebar from '../../../components/SimpleSidebar/SimpleSidebar';
 import { PROPERTY_PRESETS, INIT_PAGECONFIG } from '../../../utils/constants';
 import { getEventListColumns } from './constants';

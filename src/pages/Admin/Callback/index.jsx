@@ -8,7 +8,7 @@ import { fetchCategoryTree } from '../Category/thunk';
 import { fetchCallbackList, createCallback, updateCallback, fetchCallbackDetail, deleteCallback } from './thunk';
 import AdminTableToolbar from '../../../components/AdminTableToolbar/AdminTableToolbar';
 import PageList from '../../../components/PageList/PageList';
-import ResourceRegister from '../../../components/ResourceRegister';
+import ResourceRegister from '../../../components/ResourceRegister/ResourceRegister';
 import SimpleSidebar from '../../../components/SimpleSidebar/SimpleSidebar';
 import { getCallbackListColumns } from './constants';
 import { PROPERTY_PRESETS, INIT_PAGECONFIG } from '../../../utils/constants';
