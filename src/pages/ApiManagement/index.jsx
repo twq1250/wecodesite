@@ -99,7 +99,7 @@ function ApiManagement() {
   const handleCopyApprovalAddress = (record) => {
     setCurrentApprovalInfo({
       id: record.id,
-      approver: record.approver?.userName || '待分配',
+      approver: `${record.approver?.userName} ${record.approver?.userId}` || '待分配',
       approvalUrl: record.approvalUrl || ''
     });
     setApprovalModalOpen(true);

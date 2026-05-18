@@ -80,3 +80,36 @@ export const PAGE_TITLE_MAP = {
 
 // 抽屉宽度（统一）
 export const DRAWER_WIDTH = 900;
+
+// ==================== 操作确认弹窗配置 ====================
+
+export const ACTION_CONFIG = {
+  delete: {
+    defaultTitle: '确认删除',
+    defaultContent: '确定要删除吗？',
+    confirmButtonText: '确认删除',
+    loadingText: '删除中...',
+    dangerColor: '#ff4d4f'
+  },
+  withdraw: {
+    defaultTitle: '确认撤回',
+    defaultContent: '确定要撤回吗？撤回后将无法恢复。',
+    confirmButtonText: '确认撤回',
+    loadingText: '撤回中...',
+    dangerColor: '#faad14'
+  },
+  deleteConnector: {
+    defaultTitle: '确认删除',
+    defaultContent: '删除后无法恢复，确定要删除这个连接器吗？',
+    confirmButtonText: '确认删除',
+    loadingText: '删除中...',
+    dangerColor: '#ff4d4f'
+  },
+  deleteFlow: {
+    defaultTitle: '确认删除',
+    defaultContent: '删除后无法恢复，确定要删除这个连接流吗？',
+    confirmButtonText: '确认删除',
+    loadingText: '删除中...',
+    dangerColor: '#ff4d4f'
+  }
+};

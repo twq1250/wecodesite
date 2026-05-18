@@ -2,9 +2,9 @@
  * ========================================
  * 连接流管理 - 列表页面主组件
  * ========================================
- * 
+ *
  * 功能：
- * - 展示连接流列表（分页、搜索、类型筛选）
+ * - 展示连接流列表（分页、搜索）
  * - 创建新的连接流
  * - 编辑已有连接流
  * - 删除连接流
@@ -15,10 +15,11 @@ import { useNavigate } from 'react-router-dom';
 import { message, Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { fetchFlowList, deleteFlow } from './thunk';
-import AdminTableToolbar from '../../../components/AdminTableToolbar/AdminTableToolbar';
+import ConnectorSearchForm from '../../../components/ConnectorSearchForm/ConnectorSearchForm';
 import PageList from '../../../components/PageList/PageList';
+import ActionConfirmModal from '../../../components/DeleteConfirmModal/DeleteConfirmModal';
 import SimpleSidebar from '../../../components/SimpleSidebar/SimpleSidebar';
-import { pageInfo, flowSearchConfig, getFlowColumns } from './constants';
+import { pageInfo, flowSearchConfig, flowStatusOptions, getFlowColumns } from './constants';
 import { INIT_PAGECONFIG } from '../../../utils/constants';
 import './Flow.m.less';
 
@@ -27,25 +28,27 @@ import './Flow.m.less';
  */
 function FlowList() {
   const navigate = useNavigate();
-  
+
   /**
    * State定义
    */
-  
+
   // 连接流列表数据
   const [data, setData] = useState([]);
-  
+
   // 加载状态
   const [loading, setLoading] = useState(false);
-  
+
   // 分页配置
   const [pagination, setPagination] = useState(INIT_PAGECONFIG);
-  
+
   // 搜索关键词
   const [keyword, setKeyword] = useState('');
-  
-  // 流程类型筛选
-  const [flowType, setFlowType] = useState(undefined);
+
+  // 删除确认弹窗相关状态
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   /**
    * 数据加载
@@ -53,22 +56,21 @@ function FlowList() {
    */
   const loadData = async (params = {}) => {
     setLoading(true);
-    
+
     // 合并参数
     const finalParams = {
       keyword: params.keyword ?? keyword,
-      type: params.type ?? flowType,
       curPage: params.curPage ?? pagination.curPage,
       pageSize: params.pageSize ?? pagination.pageSize,
     };
 
     // 调用API
     const result = await fetchFlowList(finalParams);
-    
+
     if (result && result.code === '200') {
       // 更新列表数据
       setData(result.data || []);
-      
+
       // 更新分页信息
       setPagination(prev => ({
         ...prev,
@@ -79,15 +81,18 @@ function FlowList() {
     } else {
       message.error(result?.message || '加载列表失败');
     }
-    
+
     setLoading(false);
   };
 
   /**
    * 搜索处理
+   * @param {Object} formValues - 表单值
    */
-  const handleSearch = () => {
-    loadData({ curPage: 1 });
+  const handleSearch = (formValues) => {
+    const searchKeyword = formValues.keyword || '';
+    setKeyword(searchKeyword);
+    loadData({ keyword: searchKeyword, curPage: 1 });
   };
 
   /**
@@ -97,15 +102,6 @@ function FlowList() {
    */
   const handlePageChange = (page, size) => {
     loadData({ curPage: page, pageSize: size });
-  };
-
-  /**
-   * 类型筛选变化处理
-   * @param {string} value - 流程类型
-   */
-  const handleTypeChange = (value) => {
-    setFlowType(value);
-    loadData({ type: value, curPage: 1 });
   };
 
   /**
@@ -124,19 +120,41 @@ function FlowList() {
   };
 
   /**
-   * 删除连接流
+   * 点击删除按钮
    * @param {string} id - 连接流ID
    */
-  const handleDelete = async (id) => {
-    const res = await deleteFlow(id);
-    
+  const handleDeleteClick = (id) => {
+    setDeleteItemId(id);
+    setDeleteModalVisible(true);
+  };
+
+  /**
+   * 确认删除连接流
+   */
+  const handleDeleteConfirm = async () => {
+    if (!deleteItemId) return;
+
+    setDeleteLoading(true);
+    const res = await deleteFlow(deleteItemId);
+
     if (res && res.code === '200') {
       message.success('删除成功');
-      // 刷新列表
+      setDeleteModalVisible(false);
+      setDeleteItemId(null);
       loadData();
     } else {
       message.error(res?.message || '删除失败');
     }
+
+    setDeleteLoading(false);
+  };
+
+  /**
+   * 关闭删除确认弹窗
+   */
+  const handleDeleteCancel = () => {
+    setDeleteModalVisible(false);
+    setDeleteItemId(null);
   };
 
   /**
@@ -151,7 +169,7 @@ function FlowList() {
    */
   const columns = getFlowColumns({
     handleEdit,
-    handleDelete,
+    handleDeleteClick,
   });
 
   /**
@@ -161,7 +179,7 @@ function FlowList() {
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       {/* 左侧导航栏 */}
       <SimpleSidebar />
-      
+
       {/* 主内容区 */}
       <div style={{ flex: 1, overflow: 'auto' }}>
         <div className="flow-management-page">
@@ -171,30 +189,22 @@ function FlowList() {
               <h4 className="page-title">{pageInfo.title}</h4>
               <span className="page-desc">{pageInfo.description}</span>
             </div>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<PlusOutlined />}
               onClick={handleAdd}
+              style={{ justifyContent: 'center', borderRadius: 6 }}
             >
               {pageInfo.addButtonText}
             </Button>
           </div>
 
-          {/* 搜索工具栏 */}
-          <AdminTableToolbar
+          {/* 搜索表单 */}
+          <ConnectorSearchForm
             keyword={keyword}
-            onKeywordChange={setKeyword}
             onSearch={handleSearch}
             placeholder={flowSearchConfig.placeholder}
-            type={flowType}
-            onTypeChange={handleTypeChange}
-            showTypeFilter
-            typeOptions={[
-              { value: undefined, label: '全部类型' },
-              { value: 'business', label: '业务流' },
-              { value: 'schedule', label: '定时流' },
-              { value: 'subflow', label: '子流程' },
-            ]}
+            statusOptions={flowStatusOptions}
           />
 
           {/* 表格列表 */}
@@ -209,6 +219,15 @@ function FlowList() {
             }}
             onPageChange={handlePageChange}
             scroll={{ x: 1000 }}
+          />
+
+          {/* 删除确认弹窗 */}
+          <ActionConfirmModal
+            open={deleteModalVisible}
+            onClose={handleDeleteCancel}
+            onConfirm={handleDeleteConfirm}
+            type="deleteFlow"
+            loading={deleteLoading}
           />
         </div>
       </div>

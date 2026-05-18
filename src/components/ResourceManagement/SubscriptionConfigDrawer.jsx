@@ -132,13 +132,12 @@ function SubscriptionConfigDrawer({
       )}
 
       <Form form={form} layout="vertical" className="subscription-form">
-        <Form.Item name="channelType" label="通道类型">
+        <Form.Item name="channelType" label="订阅方式">
           <Radio.Group onChange={handleChannelTypeChange}>
-            <Radio value={0}>{channelTypeMap[0]}</Radio>
+            {itemType === 'event' && <Radio value={0}>{channelTypeMap[0]}</Radio>}
             <Radio value={1}>{channelTypeMap[1]}</Radio>
-            {itemType === 'callback' && channelTypeMap[2] && (
-              <Radio value={2}>{channelTypeMap[2]}</Radio>
-            )}
+            {itemType === 'callback' && <Radio value={2}>{channelTypeMap[2]}</Radio>}
+            {itemType === 'callback' && <Radio value={3}>{channelTypeMap[3]}</Radio>}
           </Radio.Group>
         </Form.Item>
 

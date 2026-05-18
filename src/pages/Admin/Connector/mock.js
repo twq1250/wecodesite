@@ -2,9 +2,8 @@
  * ========================================
  * 连接器管理 - Mock数据
  * ========================================
- * 
- * 提供连接器相关API的mock数据，用于开发和测试阶段
- * 数据结构遵循API响应格式：{ code, message, data, page }
+ *
+ * 提供连接器列表相关API的mock数据
  */
 
 // 连接器Mock数据列表
@@ -13,7 +12,7 @@ export const mockConnectors = [
     id: 'connector-001',
     name: '企业微信连接器',
     description: '用于与企业微信进行集成，支持消息推送、成员管理等',
-    status: 1, // 1-启用，0-禁用
+    status: 1,
     icon: '💬',
     triggers: [
       {
@@ -129,7 +128,7 @@ export const mockConnectors = [
     id: 'connector-004',
     name: '邮件服务连接器',
     description: '提供邮件发送和接收功能',
-    status: 0, // 禁用状态
+    status: 0,
     icon: '✉️',
     triggers: [
       {
@@ -195,58 +194,37 @@ export const mockConnectors = [
   }
 ];
 
-// 生成响应数据的辅助函数
 /**
  * 生成标准的成功响应
- * 
- * @param {Object} options - 响应配置
- * @param {Object} options.data - 响应数据
- * @param {string} [options.message='操作成功'] - 响应消息
- * @param {Object} [options.page] - 分页信息
- * @returns {Object}
  */
 const generateSuccessResponse = ({
   data,
   message = '操作成功',
   page
 }) => {
-  const response = {
-    code: '200',
-    message
-  };
-  
+  const response = { code: '200', message };
   if (page) {
     response.page = page;
   }
-  
   if (data !== undefined) {
     response.data = data;
   }
-  
   return response;
 };
 
-// 生成标准的错误响应
 /**
  * 生成标准的错误响应
- * 
- * @param {Object} options - 响应配置
- * @param {string} [options.code='500'] - 错误码
- * @param {string} [options.message='操作失败'] - 错误消息
- * @returns {Object}
  */
 const generateErrorResponse = ({
   code = '500',
-  message = '操作失败'
+  message = '操作失败',
 }) => {
   return { code, message };
 };
 
-// Mock API 实现函数
-
 /**
  * 获取连接器列表
- * 
+ *
  * @param {Object} params - 查询参数
  * @param {string} [params.keyword] - 搜索关键词
  * @param {number} [params.curPage=1] - 当前页码
@@ -262,7 +240,6 @@ export const mockFetchConnectorList = async (params = {}) => {
     status
   } = params;
 
-  // 模拟网络延迟
   await new Promise(resolve => setTimeout(resolve, 300));
 
   let filteredList = [...mockConnectors];
@@ -299,91 +276,8 @@ export const mockFetchConnectorList = async (params = {}) => {
 };
 
 /**
- * 获取连接器详情
- * 
- * @param {string} id - 连接器ID
- * @returns {Promise<Object>}
- */
-export const mockFetchConnectorDetail = async (id) => {
-  await new Promise(resolve => setTimeout(resolve, 200));
-
-  const connector = mockConnectors.find(item => item.id === id);
-
-  if (!connector) {
-    return generateErrorResponse({
-      code: '404',
-      message: '连接器不存在'
-    });
-  }
-
-  return generateSuccessResponse({
-    data: connector
-  });
-};
-
-/**
- * 创建连接器
- * 
- * @param {Object} data - 连接器数据
- * @param {string} data.name - 连接器名称
- * @param {string} [data.description] - 连接器描述
- * @param {number} [data.status=1] - 状态
- * @returns {Promise<Object>}
- */
-export const mockCreateConnector = async (data) => {
-  await new Promise(resolve => setTimeout(resolve, 400));
-
-  const newConnector = {
-    id: `connector-${Date.now()}`,
-    ...data,
-    triggers: data.triggers || [],
-    actions: data.actions || [],
-    createdAt: new Date().toLocaleString(),
-    updatedAt: new Date().toLocaleString()
-  };
-
-  mockConnectors.push(newConnector);
-
-  return generateSuccessResponse({
-    data: newConnector,
-    message: '连接器创建成功'
-  });
-};
-
-/**
- * 更新连接器
- * 
- * @param {string} id - 连接器ID
- * @param {Object} data - 更新数据
- * @returns {Promise<Object>}
- */
-export const mockUpdateConnector = async (id, data) => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-
-  const index = mockConnectors.findIndex(item => item.id === id);
-
-  if (index === -1) {
-    return generateErrorResponse({
-      code: '404',
-      message: '连接器不存在'
-    });
-  }
-
-  mockConnectors[index] = {
-    ...mockConnectors[index],
-    ...data,
-    updatedAt: new Date().toLocaleString()
-  };
-
-  return generateSuccessResponse({
-    data: mockConnectors[index],
-    message: '连接器更新成功'
-  });
-};
-
-/**
  * 删除连接器
- * 
+ *
  * @param {string} id - 连接器ID
  * @returns {Promise<Object>}
  */
@@ -403,275 +297,5 @@ export const mockDeleteConnector = async (id) => {
 
   return generateSuccessResponse({
     message: '连接器删除成功'
-  });
-};
-
-/**
- * 获取连接器触发事件列表
- * 
- * @param {string} connectorId - 连接器ID
- * @returns {Promise<Object>}
- */
-export const mockFetchConnectorTriggers = async (connectorId) => {
-  await new Promise(resolve => setTimeout(resolve, 200));
-
-  const connector = mockConnectors.find(item => item.id === connectorId);
-
-  if (!connector) {
-    return generateErrorResponse({
-      code: '404',
-      message: '连接器不存在'
-    });
-  }
-
-  return generateSuccessResponse({
-    data: connector.triggers || []
-  });
-};
-
-/**
- * 添加触发事件
- * 
- * @param {string} connectorId - 连接器ID
- * @param {Object} data - 触发事件数据
- * @returns {Promise<Object>}
- */
-export const mockCreateTrigger = async (connectorId, data) => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-
-  const connector = mockConnectors.find(item => item.id === connectorId);
-
-  if (!connector) {
-    return generateErrorResponse({
-      code: '404',
-      message: '连接器不存在'
-    });
-  }
-
-  const newTrigger = {
-    id: `trigger-${Date.now()}`,
-    ...data
-  };
-
-  if (!connector.triggers) {
-    connector.triggers = [];
-  }
-  connector.triggers.push(newTrigger);
-
-  return generateSuccessResponse({
-    data: newTrigger,
-    message: '触发事件创建成功'
-  });
-};
-
-/**
- * 更新触发事件
- * 
- * @param {Object} params - 更新参数
- * @param {string} params.connectorId - 连接器ID
- * @param {string} params.triggerId - 触发事件ID
- * @param {Object} params.data - 更新数据
- * @returns {Promise<Object>}
- */
-export const mockUpdateTrigger = async ({ connectorId, triggerId, data }) => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-
-  const connector = mockConnectors.find(item => item.id === connectorId);
-
-  if (!connector) {
-    return generateErrorResponse({
-      code: '404',
-      message: '连接器不存在'
-    });
-  }
-
-  const triggerIndex = connector.triggers.findIndex(item => item.id === triggerId);
-
-  if (triggerIndex === -1) {
-    return generateErrorResponse({
-      code: '404',
-      message: '触发事件不存在'
-    });
-  }
-
-  connector.triggers[triggerIndex] = {
-    ...connector.triggers[triggerIndex],
-    ...data
-  };
-
-  return generateSuccessResponse({
-    data: connector.triggers[triggerIndex],
-    message: '触发事件更新成功'
-  });
-};
-
-/**
- * 删除触发事件
- * 
- * @param {Object} params - 删除参数
- * @param {string} params.connectorId - 连接器ID
- * @param {string} params.triggerId - 触发事件ID
- * @returns {Promise<Object>}
- */
-export const mockDeleteTrigger = async ({ connectorId, triggerId }) => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-
-  const connector = mockConnectors.find(item => item.id === connectorId);
-
-  if (!connector) {
-    return generateErrorResponse({
-      code: '404',
-      message: '连接器不存在'
-    });
-  }
-
-  const triggerIndex = connector.triggers.findIndex(item => item.id === triggerId);
-
-  if (triggerIndex === -1) {
-    return generateErrorResponse({
-      code: '404',
-      message: '触发事件不存在'
-    });
-  }
-
-  connector.triggers.splice(triggerIndex, 1);
-
-  return generateSuccessResponse({
-    message: '触发事件删除成功'
-  });
-};
-
-/**
- * 获取连接器执行动作列表
- * 
- * @param {string} connectorId - 连接器ID
- * @returns {Promise<Object>}
- */
-export const mockFetchConnectorActions = async (connectorId) => {
-  await new Promise(resolve => setTimeout(resolve, 200));
-
-  const connector = mockConnectors.find(item => item.id === connectorId);
-
-  if (!connector) {
-    return generateErrorResponse({
-      code: '404',
-      message: '连接器不存在'
-    });
-  }
-
-  return generateSuccessResponse({
-    data: connector.actions || []
-  });
-};
-
-/**
- * 添加执行动作
- * 
- * @param {string} connectorId - 连接器ID
- * @param {Object} data - 执行动作数据
- * @returns {Promise<Object>}
- */
-export const mockCreateAction = async (connectorId, data) => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-
-  const connector = mockConnectors.find(item => item.id === connectorId);
-
-  if (!connector) {
-    return generateErrorResponse({
-      code: '404',
-      message: '连接器不存在'
-    });
-  }
-
-  const newAction = {
-    id: `action-${Date.now()}`,
-    ...data
-  };
-
-  if (!connector.actions) {
-    connector.actions = [];
-  }
-  connector.actions.push(newAction);
-
-  return generateSuccessResponse({
-    data: newAction,
-    message: '执行动作创建成功'
-  });
-};
-
-/**
- * 更新执行动作
- * 
- * @param {Object} params - 更新参数
- * @param {string} params.connectorId - 连接器ID
- * @param {string} params.actionId - 执行动作ID
- * @param {Object} params.data - 更新数据
- * @returns {Promise<Object>}
- */
-export const mockUpdateAction = async ({ connectorId, actionId, data }) => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-
-  const connector = mockConnectors.find(item => item.id === connectorId);
-
-  if (!connector) {
-    return generateErrorResponse({
-      code: '404',
-      message: '连接器不存在'
-    });
-  }
-
-  const actionIndex = connector.actions.findIndex(item => item.id === actionId);
-
-  if (actionIndex === -1) {
-    return generateErrorResponse({
-      code: '404',
-      message: '执行动作不存在'
-    });
-  }
-
-  connector.actions[actionIndex] = {
-    ...connector.actions[actionIndex],
-    ...data
-  };
-
-  return generateSuccessResponse({
-    data: connector.actions[actionIndex],
-    message: '执行动作更新成功'
-  });
-};
-
-/**
- * 删除执行动作
- * 
- * @param {Object} params - 删除参数
- * @param {string} params.connectorId - 连接器ID
- * @param {string} params.actionId - 执行动作ID
- * @returns {Promise<Object>}
- */
-export const mockDeleteAction = async ({ connectorId, actionId }) => {
-  await new Promise(resolve => setTimeout(resolve, 300));
-
-  const connector = mockConnectors.find(item => item.id === connectorId);
-
-  if (!connector) {
-    return generateErrorResponse({
-      code: '404',
-      message: '连接器不存在'
-    });
-  }
-
-  const actionIndex = connector.actions.findIndex(item => item.id === actionId);
-
-  if (actionIndex === -1) {
-    return generateErrorResponse({
-      code: '404',
-      message: '执行动作不存在'
-    });
-  }
-
-  connector.actions.splice(actionIndex, 1);
-
-  return generateSuccessResponse({
-    message: '执行动作删除成功'
   });
 };

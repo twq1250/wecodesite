@@ -2,48 +2,50 @@
  * ========================================
  * 连接器管理 - 列表页面主组件
  * ========================================
- * 
+ *
  * 功能：
  * - 展示连接器列表（分页、搜索）
  * - 创建新的连接器
  * - 编辑已有连接器
  * - 删除连接器
- * - 查看连接器详情
  */
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { message, Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { fetchConnectorList, deleteConnector } from './thunk';
-import AdminTableToolbar from '../../../components/AdminTableToolbar/AdminTableToolbar';
+import ConnectorSearchForm from '../../../components/ConnectorSearchForm/ConnectorSearchForm';
 import PageList from '../../../components/PageList/PageList';
-import ConnectorModal from './ConnectorModal';
+import ActionConfirmModal from '../../../components/DeleteConfirmModal/DeleteConfirmModal';
 import SimpleSidebar from '../../../components/SimpleSidebar/SimpleSidebar';
-import { pageInfo, searchConfig, getConnectorColumns } from './constants';
+import { pageInfo, searchConfig, connectorStatusOptions, getConnectorColumns } from './constants';
 import { INIT_PAGECONFIG } from '../../../utils/constants';
 import './Connector.m.less';
 
 function ConnectorList() {
+  const navigate = useNavigate();
+
   /**
    * State定义
    */
-  
+
   // 连接器列表数据
   const [data, setData] = useState([]);
-  
+
   // 加载状态
   const [loading, setLoading] = useState(false);
-  
+
   // 分页配置
   const [pagination, setPagination] = useState(INIT_PAGECONFIG);
-  
+
   // 搜索关键词
   const [keyword, setKeyword] = useState('');
-  
-  // 弹窗相关状态
-  const [modalVisible, setModalVisible] = useState(false);
-  const [currentItem, setCurrentItem] = useState(null);
-  const [mode, setMode] = useState('create'); // create | edit | view
+
+  // 删除确认弹窗相关状态
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   /**
    * 数据加载
@@ -51,7 +53,7 @@ function ConnectorList() {
    */
   const loadData = async (params = {}) => {
     setLoading(true);
-    
+
     // 合并参数
     const finalParams = {
       keyword: params.keyword ?? keyword,
@@ -61,11 +63,11 @@ function ConnectorList() {
 
     // 调用API
     const result = await fetchConnectorList(finalParams);
-    
+
     if (result && result.code === '200') {
       // 更新列表数据
       setData(result.data || []);
-      
+
       // 更新分页信息
       setPagination(prev => ({
         ...prev,
@@ -76,15 +78,18 @@ function ConnectorList() {
     } else {
       message.error(result?.message || '加载列表失败');
     }
-    
+
     setLoading(false);
   };
 
   /**
    * 搜索处理
+   * @param {Object} formValues - 表单值
    */
-  const handleSearch = () => {
-    loadData({ curPage: 1 });
+  const handleSearch = (formValues) => {
+    const searchKeyword = formValues.keyword || '';
+    setKeyword(searchKeyword);
+    loadData({ keyword: searchKeyword, curPage: 1 });
   };
 
   /**
@@ -97,20 +102,10 @@ function ConnectorList() {
   };
 
   /**
-   * 关键词变化处理
-   * @param {string} value - 关键词
-   */
-  const handleKeywordChange = (value) => {
-    setKeyword(value);
-  };
-
-  /**
    * 新建连接器
    */
   const handleAdd = () => {
-    setCurrentItem(null);
-    setMode('create');
-    setModalVisible(true);
+    navigate('/admin/connector-editor');
   };
 
   /**
@@ -118,53 +113,45 @@ function ConnectorList() {
    * @param {Object} record - 连接器记录
    */
   const handleEdit = (record) => {
-    setCurrentItem(record);
-    setMode('edit');
-    setModalVisible(true);
+    navigate(`/admin/connector-editor?id=${record.id}`);
   };
 
   /**
-   * 查看连接器详情
-   * @param {Object} record - 连接器记录
-   */
-  const handleView = (record) => {
-    setCurrentItem(record);
-    setMode('view');
-    setModalVisible(true);
-  };
-
-  /**
-   * 删除连接器
+   * 点击删除按钮
    * @param {string} id - 连接器ID
    */
-  const handleDelete = async (id) => {
-    const res = await deleteConnector(id);
-    
+  const handleDeleteClick = (id) => {
+    setDeleteItemId(id);
+    setDeleteModalVisible(true);
+  };
+
+  /**
+   * 确认删除连接器
+   */
+  const handleDeleteConfirm = async () => {
+    if (!deleteItemId) return;
+
+    setDeleteLoading(true);
+    const res = await deleteConnector(deleteItemId);
+
     if (res && res.code === '200') {
       message.success('删除成功');
-      // 刷新列表
+      setDeleteModalVisible(false);
+      setDeleteItemId(null);
       loadData();
     } else {
       message.error(res?.message || '删除失败');
     }
+
+    setDeleteLoading(false);
   };
 
   /**
-   * 弹窗关闭/操作成功回调
+   * 关闭删除确认弹窗
    */
-  const handleSuccess = () => {
-    setModalVisible(false);
-    setCurrentItem(null);
-    // 刷新列表
-    loadData();
-  };
-
-  /**
-   * 关闭弹窗
-   */
-  const handleCloseModal = () => {
-    setModalVisible(false);
-    setCurrentItem(null);
+  const handleDeleteCancel = () => {
+    setDeleteModalVisible(false);
+    setDeleteItemId(null);
   };
 
   /**
@@ -178,9 +165,8 @@ function ConnectorList() {
    * 获取表格列配置
    */
   const columns = getConnectorColumns({
-    handleView,
     handleEdit,
-    handleDelete,
+    handleDeleteClick,
   });
 
   /**
@@ -190,7 +176,7 @@ function ConnectorList() {
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       {/* 左侧导航栏 */}
       <SimpleSidebar />
-      
+
       {/* 主内容区 */}
       <div style={{ flex: 1, overflow: 'auto' }}>
         <div className="connector-management-page">
@@ -200,21 +186,17 @@ function ConnectorList() {
               <h4 className="page-title">{pageInfo.title}</h4>
               <span className="page-desc">{pageInfo.description}</span>
             </div>
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />}
-              onClick={handleAdd}
-            >
+            <Button type="primary" onClick={handleAdd} style={{ justifyContent: 'center', borderRadius: 6 }}>
               {pageInfo.addButtonText}
             </Button>
           </div>
 
-          {/* 搜索工具栏 */}
-          <AdminTableToolbar
+          {/* 搜索表单 */}
+          <ConnectorSearchForm
             keyword={keyword}
-            onKeywordChange={handleKeywordChange}
             onSearch={handleSearch}
             placeholder={searchConfig.placeholder}
+            statusOptions={connectorStatusOptions}
           />
 
           {/* 表格列表 */}
@@ -231,13 +213,13 @@ function ConnectorList() {
             scroll={{ x: 1200 }}
           />
 
-          {/* 编辑弹窗 */}
-          <ConnectorModal
-            visible={modalVisible}
-            data={currentItem}
-            mode={mode}
-            onSuccess={handleSuccess}
-            onCancel={handleCloseModal}
+          {/* 删除确认弹窗 */}
+          <ActionConfirmModal
+            open={deleteModalVisible}
+            onClose={handleDeleteCancel}
+            onConfirm={handleDeleteConfirm}
+            type="deleteConnector"
+            loading={deleteLoading}
           />
         </div>
       </div>

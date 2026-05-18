@@ -2,13 +2,12 @@
  * ========================================
  * 连接器管理模块 - 常量配置
  * ========================================
- * 
+ *
  * 定义连接器管理页面的配置信息、表格列配置、状态映射等
  */
 
 import React from 'react';
-import { Tag, Badge, Button, Space, Tooltip, Popconfirm } from 'antd';
-import dayjs from 'dayjs';
+import { Tag, Badge, Button, Space, Tooltip } from 'antd';
 
 /**
  * 页面配置信息
@@ -30,40 +29,28 @@ export const CONNECTOR_STATUS_MAP = {
 };
 
 /**
- * 触发类型映射
+ * 连接器状态选项
+ * 用于搜索表单下拉选择
  */
-export const TRIGGER_TYPE_MAP = {
-  webhook: { text: 'Webhook', color: 'blue' },
-  api: { text: 'API轮询', color: 'green' },
-  schedule: { text: '定时触发', color: 'purple' },
-};
-
-/**
- * 执行动作HTTP方法映射
- */
-export const HTTP_METHOD_MAP = {
-  GET: { text: 'GET', color: 'green' },
-  POST: { text: 'POST', color: 'blue' },
-  PUT: { text: 'PUT', color: 'orange' },
-  DELETE: { text: 'DELETE', color: 'red' },
-};
+export const connectorStatusOptions = [
+  { value: 1, label: '启用' },
+  { value: 0, label: '禁用' },
+];
 
 /**
  * 获取表格列配置
- * 
+ *
  * @param {Object} callbacks - 回调函数对象
  * @param {Function} callbacks.handleEdit - 编辑回调
- * @param {Function} callbacks.handleDelete - 删除回调
- * @param {Function} callbacks.handleView - 查看回调
+ * @param {Function} callbacks.handleDeleteClick - 删除按钮点击回调
  * @returns {Array} 表格列配置数组
  */
-export const getConnectorColumns = ({ handleEdit, handleDelete, handleView }) => [
+export const getConnectorColumns = ({ handleEdit, handleDeleteClick }) => [
   {
     title: '连接器名称',
     dataIndex: 'name',
     key: 'name',
     width: 200,
-    sorter: (a, b) => a.name.localeCompare(b.name),
   },
   {
     title: '描述',
@@ -112,15 +99,12 @@ export const getConnectorColumns = ({ handleEdit, handleDelete, handleView }) =>
     dataIndex: 'createdAt',
     key: 'createdAt',
     width: 180,
-    sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
-    render: (text) => dayjs(text).format('YYYY-MM-DD HH:mm:ss'),
   },
   {
     title: '更新时间',
     dataIndex: 'updatedAt',
     key: 'updatedAt',
     width: 180,
-    render: (text) => dayjs(text).format('YYYY-MM-DD HH:mm:ss'),
   },
   {
     title: '操作',
@@ -129,32 +113,21 @@ export const getConnectorColumns = ({ handleEdit, handleDelete, handleView }) =>
     fixed: 'right',
     render: (_, record) => (
       <Space size="small">
-        <Button 
-          type="link" 
-          size="small" 
-          onClick={() => handleView(record)}
+        <Button
+          type="link"
+          size="small"
+          onClick={() => handleEdit(record)}
         >
           查看
         </Button>
-        <Button 
-          type="link" 
-          size="small" 
-          onClick={() => handleEdit(record)}
+        <Button
+          type="link"
+          size="small"
+          danger
+          onClick={() => handleDeleteClick(record.id)}
         >
-          编辑
+          删除
         </Button>
-        <Popconfirm
-          title="确认删除"
-          description="删除后无法恢复，确定要删除这个连接器吗？"
-          onConfirm={() => handleDelete(record.id)}
-          okText="确认"
-          cancelText="取消"
-          okButtonProps={{ danger: true }}
-        >
-          <Button type="link" size="small" danger>
-            删除
-          </Button>
-        </Popconfirm>
       </Space>
     ),
   },

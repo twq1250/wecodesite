@@ -1,40 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Input } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { ACTION_CONFIG } from '../../utils/constants';
 
-const ACTION_CONFIG = {
-  delete: {
-    defaultTitle: '确认删除',
-    defaultContent: '确定要删除吗？',
-    confirmButtonText: '确认删除',
-    loadingText: '删除中...',
-    dangerColor: '#ff4d4f'
-  },
-  withdraw: {
-    defaultTitle: '确认撤回',
-    defaultContent: '确定要撤回吗？撤回后将无法恢复。',
-    confirmButtonText: '确认撤回',
-    loadingText: '撤回中...',
-    dangerColor: '#faad14'
-  }
-};
-
-function ActionConfirmModal({ 
-  open, 
-  onClose, 
-  onConfirm, 
+function ActionConfirmModal({
+  open,
+  onClose,
+  onConfirm,
   type = 'delete',
-  title, 
-  content, 
+  title,
+  content,
   loading,
-  requireConfirmText = null 
+  requireConfirmText = null
 }) {
   const [confirmText, setConfirmText] = useState('');
-  
+
   const config = ACTION_CONFIG[type] || ACTION_CONFIG.delete;
   const modalTitle = title || config.defaultTitle;
   const modalContent = content || config.defaultContent;
-  
+
   useEffect(() => {
     if (!open) {
       setConfirmText('');
@@ -90,12 +74,12 @@ function ActionConfirmModal({
       )}
 
       <div style={{ textAlign: 'center', paddingBottom: 16 }}>
-        <button 
+        <button
           onClick={onClose}
-          style={{ 
-            marginRight: 8, 
-            padding: '6px 24px', 
-            border: '1px solid #d9d9d9', 
+          style={{
+            marginRight: 8,
+            padding: '6px 24px',
+            border: '1px solid #d9d9d9',
             background: '#fff',
             borderRadius: 4,
             cursor: 'pointer'
@@ -103,12 +87,12 @@ function ActionConfirmModal({
         >
           取消
         </button>
-        <button 
+        <button
           onClick={handleConfirm}
           disabled={isConfirmDisabled()}
-          style={{ 
-            padding: '6px 24px', 
-            background: config.dangerColor, 
+          style={{
+            padding: '6px 24px',
+            background: config.dangerColor,
             color: '#fff',
             border: 'none',
             borderRadius: 4,

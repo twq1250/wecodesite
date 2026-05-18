@@ -2,12 +2,11 @@
  * ========================================
  * 连接流管理模块 - 常量配置
  * ========================================
- * 
+ *
  * 定义连接流管理页面的配置信息、表格列配置、状态映射等
  */
 
-import { Tag, Badge, Button, Space, Popconfirm } from 'antd';
-import dayjs from 'dayjs';
+import { Tag, Badge, Button, Space } from 'antd';
 
 /**
  * 页面配置信息
@@ -22,20 +21,20 @@ export const pageInfo = {
  * 流程类型映射
  */
 export const FLOW_TYPE_MAP = {
-  business: { 
-    text: '业务流', 
+  business: {
+    text: '业务流',
     color: 'blue',
-    description: '事件驱动的流程' 
+    description: '事件驱动的流程'
   },
-  schedule: { 
-    text: '定时流', 
+  schedule: {
+    text: '定时流',
     color: 'green',
-    description: '定时触发的流程' 
+    description: '定时触发的流程'
   },
-  subflow: { 
-    text: '子流程', 
+  subflow: {
+    text: '子流程',
     color: 'purple',
-    description: '可被调用的公共流程' 
+    description: '可被调用的公共流程'
   },
 };
 
@@ -43,33 +42,47 @@ export const FLOW_TYPE_MAP = {
  * 流程状态映射
  */
 export const FLOW_STATUS_MAP = {
-  0: { 
-    text: '草稿', 
+  0: {
+    text: '草稿',
     color: 'default',
-    status: 'default' 
+    status: 'default'
   },
-  1: { 
-    text: '已发布', 
+  1: {
+    text: '已发布',
     color: 'success',
-    status: 'success' 
+    status: 'success'
+  },
+  3: {
+    text: '已下线',
+    color: 'error',
+    status: 'error'
   },
 };
 
 /**
+ * 连接流状态选项
+ * 用于搜索表单下拉选择
+ */
+export const flowStatusOptions = [
+  { value: 1, label: '已发布' },
+  { value: 0, label: '草稿' },
+  { value: 3, label: '已下线' },
+];
+
+/**
  * 获取表格列配置
- * 
+ *
  * @param {Object} callbacks - 回调函数对象
  * @param {Function} callbacks.handleEdit - 编辑回调
- * @param {Function} callbacks.handleDelete - 删除回调
+ * @param {Function} callbacks.handleDeleteClick - 删除按钮点击回调
  * @returns {Array} 表格列配置数组
  */
-export const getFlowColumns = ({ handleEdit, handleDelete }) => [
+export const getFlowColumns = ({ handleEdit, handleDeleteClick }) => [
   {
     title: '流程名称',
     dataIndex: 'name',
     key: 'name',
     width: 200,
-    sorter: (a, b) => a.name.localeCompare(b.name),
   },
   {
     title: '流程类型',
@@ -104,40 +117,39 @@ export const getFlowColumns = ({ handleEdit, handleDelete }) => [
     ),
   },
   {
+    title: '创建时间',
+    dataIndex: 'createdAt',
+    key: 'createdAt',
+    width: 180,
+  },
+  {
     title: '更新时间',
     dataIndex: 'updatedAt',
     key: 'updatedAt',
     width: 180,
-    sorter: (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt),
-    defaultSortOrder: 'descend',
-    render: (text) => dayjs(text).format('YYYY-MM-DD HH:mm:ss'),
   },
   {
     title: '操作',
     key: 'action',
-    width: 120,
+    width: 200,
     fixed: 'right',
     render: (_, record) => (
       <Space size="small">
-        <Button 
-          type="link" 
-          size="small" 
+        <Button
+          type="link"
+          size="small"
           onClick={() => handleEdit(record)}
         >
           编辑
         </Button>
-        <Popconfirm
-          title="确认删除"
-          description="删除后无法恢复，确定要删除这个连接流吗？"
-          onConfirm={() => handleDelete(record.id)}
-          okText="确认"
-          cancelText="取消"
-          okButtonProps={{ danger: true }}
+        <Button
+          type="link"
+          size="small"
+          danger
+          onClick={() => handleDeleteClick(record.id)}
         >
-          <Button type="link" size="small" danger>
-            删除
-          </Button>
-        </Popconfirm>
+          删除
+        </Button>
       </Space>
     ),
   },

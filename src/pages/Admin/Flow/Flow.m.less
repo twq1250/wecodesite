@@ -4,33 +4,49 @@
 
 .flow-management-page {
   padding: 24px;
-  background-color: #fafafa;
+  background: #fff;
   min-height: 100%;
-  
-  // 页面头部
+
   .page-header {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: flex-start;
     margin-bottom: 24px;
-    padding: 16px 24px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    
-    .page-header-left {
-      .page-title {
-        margin: 0 0 8px 0;
-        font-size: 20px;
-        font-weight: 600;
-        color: #333;
-      }
-      
-      .page-desc {
-        color: rgba(0, 0, 0, 0.45);
-        font-size: 14px;
-        margin: 0;
-      }
+
+    &-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
+  }
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.page-desc {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.toolbar {
+  margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+
+  :global(.ant-table) {
+    min-width: 800px;
+  }
+
+  :global(.ant-table-thead > tr > th),
+  :global(.ant-table-tbody > tr > td) {
+    white-space: nowrap;
   }
 }
