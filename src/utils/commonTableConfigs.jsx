@@ -137,7 +137,7 @@ export const createApiManagementColumns = () => [
   },
   {
     title: '认证方式',
-    dataIndex: 'authType',
+    dataIndex: ['api', 'authType'],
     key: 'authType',
     width: 100,
     render: (type) => AUTH_TYPE[type] || '-',

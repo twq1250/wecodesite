@@ -160,7 +160,6 @@ function SubscriptionConfigDrawer({
               label={itemType === 'callback' ? '回调地址' : '请求地址'}
               rules={[
                 { required: true, message: `请输入${itemType === 'callback' ? '回调' : '请求'}地址` },
-                { pattern: /^https?:\/\/.+/, message: '地址必须以 http:// 或 https:// 开头' }
               ]}
             >
               <Input placeholder="https://your-domain.com/webhook" />

@@ -1,0 +1,65 @@
+/**
+ * 连接器编辑弹窗样式
+ */
+
+// 触发事件列表项
+.trigger-item,
+.action-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background-color: #fafafa;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  transition: all 0.3s;
+  
+  &:hover {
+    background-color: #f0f0f0;
+    border-color: #d9d9d9;
+  }
+  
+  .trigger-item-content,
+  .action-item-content {
+    flex: 1;
+    
+    .trigger-name,
+    .action-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin-right: 8px;
+    }
+    
+    .trigger-type,
+    .action-method {
+      font-size: 12px;
+      color: #999;
+    }
+    
+    .trigger-desc,
+    .action-desc {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+    
+    .action-endpoint {
+      font-size: 12px;
+      color: #666;
+      margin-left: 8px;
+      font-family: monospace;
+    }
+  }
+}
+
+// 编辑表单
+.trigger-edit-form,
+.action-edit-form {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+}

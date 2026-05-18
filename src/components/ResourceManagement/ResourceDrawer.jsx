@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Drawer, Tabs, Table, Button, Pagination, Input, Select, message } from 'antd';
 const { TabPane } = Tabs;
 import { PAGE_SIZE_OPTIONS, INIT_PAGECONFIG, DRAWER_WIDTH } from '../../utils/constants';
@@ -356,7 +356,7 @@ function ResourceDrawer({
   // ==================== 条件渲染 ====================
   
   // 渲染第一层Tabs（仅 showAdvancedFeatures=true 时显示）
-  const renderFirstLevelTabs = useCallback(() => {
+  const renderFirstLevelTabs = () => {
     if (!showAdvancedFeatures) return null;
     
     const tabs = tabConfig.firstLevelTabs;
@@ -372,10 +372,10 @@ function ResourceDrawer({
         ))}
       </Tabs>
     );
-  }, [showAdvancedFeatures, tabConfig, activeIdentityType]);
+  };
   
   // 渲染第二层Tabs（仅 showAdvancedFeatures=true 时显示）
-  const renderSecondLevelTabs = useCallback(() => {
+  const renderSecondLevelTabs = () => {
     if (!showAdvancedFeatures) return null;
     
     const firstLevelTab = tabConfig.firstLevelTabs.find(tab => tab.key === activeIdentityType);
@@ -393,10 +393,10 @@ function ResourceDrawer({
         ))}
       </Tabs>
     );
-  }, [showAdvancedFeatures, tabConfig, activeIdentityType, activeApiType]);
+  };
   
   // 渲染模块侧边栏（仅 showAdvancedFeatures=true 时显示）
-  const renderModuleSidebar = useCallback(() => {
+  const renderModuleSidebar = () => {
     if (!showAdvancedFeatures) return null;
     
     return (
@@ -414,7 +414,7 @@ function ResourceDrawer({
         </ul>
       </div>
     );
-  }, [showAdvancedFeatures, modulesData, activeModule]);
+  };
 
   // ==================== 主渲染 ====================
   return (

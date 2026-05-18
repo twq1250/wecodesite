@@ -82,6 +82,36 @@ export const API_CONFIG = {
     UPDATE: '/approval-flows/{id}',
     DELETE: '/approval-flows/{id}',
   },
+
+  /**
+   * 连接器管理相关API
+   * 支持连接器的增删改查和触发事件、执行动作的管理
+   */
+  CONNECTORS: {
+    LIST: '/connectors',
+    DETAIL: '/connectors/{id}',
+    CREATE: '/connectors',
+    UPDATE: '/connectors/{id}',
+    DELETE: '/connectors/{id}',
+    TRIGGERS: '/connectors/{id}/triggers',
+    TRIGGER_DETAIL: '/connectors/{id}/triggers/{triggerId}',
+    ACTIONS: '/connectors/{id}/actions',
+    ACTION_DETAIL: '/connectors/{id}/actions/{actionId}',
+  },
+
+  /**
+   * 连接流管理相关API
+   * 支持连接流的增删改查和发布/取消发布操作
+   */
+  FLOWS: {
+    LIST: '/flows',
+    DETAIL: '/flows/{id}',
+    CREATE: '/flows',
+    UPDATE: '/flows/{id}',
+    DELETE: '/flows/{id}',
+    PUBLISH: '/flows/{id}/publish',
+    UNPUBLISH: '/flows/{id}/unpublish',
+  },
 };
 
 export const buildApiUrl = (template, params = {}) => {

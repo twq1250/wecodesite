@@ -1,0 +1,54 @@
+/**
+ * 连接器管理页面样式
+ */
+
+.connector-management-page {
+  padding: 24px;
+  background-color: #fafafa;
+  min-height: 100%;
+  
+  // 页面头部
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    padding: 16px 24px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    
+    .page-header-left {
+      .page-title {
+        margin: 0 0 8px 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: #333;
+      }
+      
+      .page-desc {
+        color: rgba(0, 0, 0, 0.45);
+        font-size: 14px;
+        margin: 0;
+      }
+    }
+  }
+  
+  // 表格容器
+  .ant-table-wrapper {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    
+    .ant-table {
+      .ant-table-thead > tr > th {
+        background-color: #fafafa;
+        font-weight: 600;
+      }
+      
+      .ant-table-tbody > tr:hover > td {
+        background-color: #e6f7ff;
+      }
+    }
+  }
+}

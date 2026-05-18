@@ -57,7 +57,9 @@ export const ADMIN_MENU_CONFIG = [
   { title: 'API列表', router: '/admin/apis' },
   { title: '事件列表', router: '/admin/events' },
   { title: '回调列表', router: '/admin/callbacks' },
-  { title: '审批中心', router: '/admin/approvals' }
+  { title: '审批中心', router: '/admin/approvals' },
+  { title: '连接器管理', router: '/admin/connectors' },
+  { title: '连接流管理', router: '/admin/flows' }
 ];
 
 // ==================== 通用组件常量 ====================
