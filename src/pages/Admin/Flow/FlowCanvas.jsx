@@ -78,7 +78,7 @@ function FlowCanvas({ isNew = false }) {
       setNodes(flowData.nodes || []);
       setEdges(flowData.edges || []);
     } else {
-      message.error(result?.message || '加载流程详情失败');
+      message.error(result?.messageZh || result?.message || '加载流程详情失败');
     }
   };
 
@@ -291,7 +291,7 @@ function FlowCanvas({ isNew = false }) {
       message.success(isNew ? '创建成功' : '保存成功');
       navigate('/admin/flows');
     } else {
-      message.error(result?.message || '操作失败');
+      message.error(result?.messageZh || result?.message || '操作失败');
     }
     
     setLoading(false);

@@ -5,14 +5,13 @@ import {
   Input,
   Button,
   Divider,
-  Tag,
-  Space,
   message,
+  Space,
   Select,
 } from 'antd';
 import {
-  MinusCircleOutlined,
   PlusOutlined,
+  MinusCircleOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 
@@ -76,7 +75,7 @@ function ApprovalFlowFormModal({
       if (result && result.code === '200') {
         form.resetFields();
       } else {
-        message.error(result?.message || '操作失败');
+        message.error(result?.messageZh || result?.message || '操作失败');
       }
     } catch (error) {
     } finally {

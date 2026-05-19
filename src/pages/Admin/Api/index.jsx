@@ -37,7 +37,7 @@ function ApiList() {
     if (result && result.code === '200') {
       setCategories(result.data || []);
     } else {
-      message.error(result?.message || '加载分类失败');
+      message.error(result?.messageZh || result?.message || '加载分类失败');
     }
   };
 
@@ -66,7 +66,7 @@ function ApiList() {
         pageSize: finalSize
       }));
     } else {
-      message.error(result?.message || '加载列表失败');
+      message.error(result?.messageZh || result?.message || '加载列表失败');
     }
 
     setLoading(false);
@@ -114,7 +114,7 @@ function ApiList() {
       message.success('删除成功');
       loadData();
     } else {
-      message.error(res?.message || '删除失败');
+      message.error(res?.messageZh || res?.message || '删除失败');
     }
   };
 

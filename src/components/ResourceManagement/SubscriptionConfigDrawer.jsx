@@ -84,7 +84,7 @@ function SubscriptionConfigDrawer({
         onSave();
         onClose();
       } else {
-        message.error(res?.message || '保存失败');
+        message.error(res?.messageZh || res?.message || '保存失败');
       }
     } catch (error) {
       message.error('保存失败');

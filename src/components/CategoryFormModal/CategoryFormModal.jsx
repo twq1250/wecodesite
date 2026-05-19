@@ -59,17 +59,12 @@ function CategoryFormModal({
       if (result && result.code === '200') {
         form.resetFields();
       } else {
-        message.error(result.message || '提交失败')
-      }      
+        message.error(result.messageZh || result.message || '提交失败')
+      }
     } catch (error) {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCancel = () => {
-    form.resetFields();
-    onClose();
   };
 
   const getModalTitle = () => {
@@ -80,6 +75,11 @@ function CategoryFormModal({
       return '新增子分类';
     }
     return '新增一级分类';
+  };
+
+  const handleCancel = () => {
+    form.resetFields();
+    onClose();
   };
 
   return (

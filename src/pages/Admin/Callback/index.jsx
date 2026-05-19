@@ -44,7 +44,7 @@ function CallbackList() {
       if (res && res.code === '200') {
         setCategories(res.data || []);
       } else {
-        message.error(res?.message || '加载分类失败');
+        message.error(res?.messageZh || res?.message || '加载分类失败');
       }
     } catch (err) {
       message.error('加载分类异常');
@@ -72,7 +72,7 @@ function CallbackList() {
           pageSize: queryParams.pageSize
         }));
       } else {
-        message.error(res?.message || '加载列表失败');
+        message.error(res?.messageZh || res?.message || '加载列表失败');
       }
     } catch (err) {
       message.error('加载列表异常');
@@ -124,7 +124,7 @@ function CallbackList() {
         message.success('删除成功');
         loadRecords();
       } else {
-        message.error(res?.message || '删除失败');
+        message.error(res?.messageZh || res?.message || '删除失败');
       }
     } catch (err) {
       message.error('删除异常');

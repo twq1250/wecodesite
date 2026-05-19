@@ -123,7 +123,7 @@ function ResourceDrawer({
       setModulesData(transformedModules);
       return transformedModules;
     } else {
-      message.error(categoriesRes?.message || '加载分类失败');
+      message.error(categoriesres?.messageZh || res?.message || '加载分类失败');
       setModulesData([]);
       return [];
     }
@@ -185,7 +185,7 @@ function ResourceDrawer({
       setData(result.data);
       setPagination(prev => ({ ...prev, total: result.total || result.data.length }));
     } else {
-      message.error(result?.message || result?.messageZh || '加载列表失败');
+      message.error(result?.messageZh || result?.message || '加载列表失败');
       setData([]);
       setPagination(prev => ({ ...prev, total: 0 }));
     }
@@ -227,7 +227,7 @@ function ResourceDrawer({
             await loadData({ categoryId: rootId, needReview: 'all', keyword: '' }, [{ key: 'all', value: rootId }], 'all');
           }
         } else {
-          message.error(categoriesRes?.message || '加载分类失败');
+          message.error(categoriesres?.messageZh || res?.message || '加载分类失败');
         }
       }
     };

@@ -57,7 +57,7 @@ function ApiManagement() {
         pageSize: size
       }));
     } else {
-      message.error(result?.message || '加载列表失败');
+      message.error(result?.messageZh || result?.message || '加载列表失败');
     }
     
     setLoading(false);
@@ -89,7 +89,7 @@ function ApiManagement() {
       loadData(1, INIT_PAGECONFIG.pageSize);
       setDrawerOpen(false);
     } else {
-      message.error(res?.message || '申请失败');
+      message.error(res?.messageZh || res?.message || '申请失败');
     }
     
     setSubscribeLoading(false);
@@ -123,7 +123,7 @@ function ApiManagement() {
       setDeleteModalOpen(false);
       loadData(pagination.curPage);
     } else {
-      message.error(res?.message || '删除失败');
+      message.error(res?.messageZh || res?.message || '删除失败');
     }
     
     setDeleteLoading(false);
@@ -148,7 +148,7 @@ function ApiManagement() {
       setCurrentWithdrawRecord(null);
       loadData(pagination.curPage);
     } else {
-      message.error(res?.message || '撤回失败');
+      message.error(res?.messageZh || res?.message || '撤回失败');
     }
     
     setWithdrawLoading(false);

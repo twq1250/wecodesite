@@ -39,7 +39,7 @@ function EventList() {
     if (result && result.code === '200') {
       setCategories(result.data || []);
     } else {
-      message.error(result?.message || '加载分类失败');
+      message.error(result?.messageZh || result?.message || '加载分类失败');
     }
   };
 
@@ -65,7 +65,7 @@ function EventList() {
         pageSize: mergedParams.pageSize
       }));
     } else {
-      message.error(result?.message || '加载列表失败');
+      message.error(result?.messageZh || result?.message || '加载列表失败');
     }
 
     setLoading(false);

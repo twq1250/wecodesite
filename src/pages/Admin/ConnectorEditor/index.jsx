@@ -105,7 +105,7 @@ const ConnectorEditor = () => {
       setTriggers(connectorData.triggers || []);
       setActions(connectorData.actions || []);
     } else {
-      message.error(result?.message || '加载连接器详情失败');
+      message.error(result?.messageZh || result?.message || '加载连接器详情失败');
     }
 
     setDetailLoading(false);
@@ -196,7 +196,7 @@ const ConnectorEditor = () => {
         navigate('/admin/connectors');
       }
     } else {
-      message.error(result?.message || '操作失败');
+      message.error(result?.messageZh || result?.message || '操作失败');
     }
 
     setLoading(false);

@@ -27,11 +27,11 @@ function ApprovalOpinionModal({
     setLoading(true);
     setError('');
 
-    const result = await onConfirm(approvalId, comment.trim());
-    if (result && result.code === '200') {
+    const res = await onConfirm(approvalId, comment.trim());
+    if (res && res.code === '200') {
       setComment('');
     } else {
-      message.error(result?.message || '操作失败');
+      setError('操作失败，请重试');
     }
     setLoading(false);
   };

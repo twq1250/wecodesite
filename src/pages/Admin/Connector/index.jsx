@@ -76,7 +76,7 @@ function ConnectorList() {
         pageSize: finalParams.pageSize,
       }));
     } else {
-      message.error(result?.message || '加载列表失败');
+      message.error(result?.messageZh || result?.message || '加载列表失败');
     }
 
     setLoading(false);
@@ -140,7 +140,7 @@ function ConnectorList() {
       setDeleteItemId(null);
       loadData();
     } else {
-      message.error(res?.message || '删除失败');
+      message.error(res?.messageZh || res?.message || '删除失败');
     }
 
     setDeleteLoading(false);
